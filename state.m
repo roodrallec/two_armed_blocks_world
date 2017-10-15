@@ -1,4 +1,4 @@
-classdef state
+classdef state < handle
     %STATE Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -25,6 +25,8 @@ classdef state
             
             obj.maxColumns = maxColumns;
             obj.updatecolumnavailable();
+            obj.addheavierpred();
+            obj.addlightblockpred();
         end
         function pred = composePredicate(obj, predDesc)
             predElems = regexp(erase(predDesc, ')'), '\(|,', 'split');
@@ -89,6 +91,37 @@ classdef state
                 obj.add(usedColsNumPred)
             end
         end
+        function obj = addheavierpred(obj)
+            function pred = createheavierpred(b1, b2)
+                if(b1.weight == b2.weight)
+                    pred = {
+                        predicate(predicate.heavier, [b1, b2]), ...
+                        predicate(predicate.heavier, [b2, b1]), ...
+                        };
+                elseif(b1.weight > b2.weight)
+                    pred = {predicate(predicate.heavier, [b1, b2])};
+                else
+                    pred = {predicate(predicate.heavier, [b2, b1])};
+                end
+            end
+            blockPairs = combnk(obj.blocksMap.values,2);
+            heavierPreds = cellfun(@createheavierpred, blockPairs(:,1), ...
+                blockPairs(:,2), 'UniformOutput', false);
+            cellfun(@obj.add, heavierPreds)    
+        end
+        function obj = addlightblockpred(obj)
+            function pred = createlightblockpred(b)
+                if(b.weight <= predicate.maxLightWeight)
+                    pred = {predicate(predicate.lightBlock, b)};
+                else
+                    pred = {};
+                end
+            end
+            lightBlockPreds = cellfun(@createlightblockpred, ...
+                obj.blocksMap.values, 'UniformOutput', false);
+            cellfun(@obj.add, lightBlockPreds)
+        end
+        
     end
 end
 
