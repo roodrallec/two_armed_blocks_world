@@ -12,15 +12,17 @@ classdef action
         
     end
     properties (Constant, Hidden = true)
-        pickUpLeft = "PICK-UP-LEFT";  % with arm left, pickup block X
+        pickUpLeft = "PICK-UP-LEFT";    % with arm left, pickup block X
         pickUpRight = "PICK-UP-RIGHT";  % with arm right, pickup block X
-        stack = "STACK";  % with arm a, stack block X, on block Y
-        unstackLeft = "UNSTACK-LEFT";  % with arm left, un-stack block X, from block Y
-        unstackRight = "UNSTACK-RIGHT";  % with arm right, un-stack block X, from block Y
-        leave = "LEAVE"  %  with arm a, leave block X on the table
+        stackLeft = "STACK-LEFT";       % with arm left, stack block X, on block Y
+        stackRight = "STACK-RIGHT";     % with arm right, stack block X, on block Y
+        unstackLeft = "UNSTACK-LEFT";   % with arm left, un-stack block X, from block Y
+        unstackRight = "UNSTACK-RIGHT"; % with arm right, un-stack block X, from block Y
+        leaveLeft = "LEAVE-LEFT";       %  with arm left, leave block X on the table
+        leaveRight = "LEAVE-RIGHT";     %  with arm right, leave block X on the table
         
-        leftArm = predicate.armsIDs(1)
-        rightArm = predicate.armsIDs(2)
+        leftArm = predicate.armsIDs(1);
+        rightArm = predicate.armsIDs(2);
     end
     
     methods
@@ -30,9 +32,9 @@ classdef action
            % obj.Property1 = inputArg1 + inputArg2;
            obj.name = name;
            obj.X = args(1);
-           if(ismember(name, [obj.stack, obj.unstackLeft, ...
-                   obj.unstackRight]))
-               obj.X = args(1);
+           if(ismember(name, [obj.stackLeft, obj.stackRight, ...
+                   obj.unstackLeft, obj.unstackRight]))
+               obj.Y = args(2);
            end
            obj.assignconditions()
         end
@@ -47,8 +49,8 @@ classdef action
                         predicate(predicate.lightBlock, obj.X)
                     };
                     obj.add = {
-                        predicate(predicate.holding, obj.X, obj.leftArm), ...
-                        predicate(predicate.usedColsNum, true) % TODO: is a column available?
+                        predicate(predicate.holding, obj.X, obj.leftArm)%, ...
+                        % predicate(predicate.usedColsNum, true) % is a column available?
                     };
                     obj.del = {
                         predicate(predicate.onTable, obj.X), ...
@@ -63,27 +65,42 @@ classdef action
                         predicate(predicate.lightBlock, obj.X)
                     };
                     obj.add = {
-                        predicate(predicate.holding, obj.X, obj.rightArm), ...
-                        predicate(predicate.usedColsNum, true) % TODO: is a column available?
+                        predicate(predicate.holding, obj.X, obj.rightArm) %, ...
+                        % predicate(predicate.usedColsNum, true) % is a column available?
                     };
                     obj.del = {
                         predicate(predicate.onTable, obj.X), ...
                         predicate(predicate.emptyArm, obj.rightArm), ...
                         predicate(predicate.clear, obj.X)
                     };
-                case obj.stack
+                case obj.stackLeft
                     obj.precond = {
-                        predicate(predicate.holding, NaN), ...  % the arm is not relevant TODO: check if it works with isequaln
+                        predicate(predicate.holding, obj.leftArm), ...
                         predicate(predicate.clear, obj.Y), ...
-                        predicate(predicate.heavier(obj.Y, obj.X))  % TODO: list of heavier predicates generated
+                        predicate(predicate.heavier(obj.Y, obj.X))
                     };
                     obj.add = {
                         predicate(predicate.on, obj.X, obj.Y), ...
-                        predicate(predicate.emptyArm, NaN), ...  % TODO: instantiate this parameter
+                        predicate(predicate.emptyArm, obj.leftArm), ...
                         predicate(predicate.clear, obj.X)
                     };
                     obj.del = {
-                        predicate(predicate.holding, NaN), ...  % TODO: instantiate this parameter
+                        predicate(predicate.holding, obj.leftArm), ...
+                        predicate(predicate.clear, obj.Y)
+                    };
+                case obj.stackRight
+                    obj.precond = {
+                        predicate(predicate.holding, obj.rightArm), ...
+                        predicate(predicate.clear, obj.Y), ...
+                        predicate(predicate.heavier(obj.Y, obj.X))
+                    };
+                    obj.add = {
+                        predicate(predicate.on, obj.X, obj.Y), ...
+                        predicate(predicate.emptyArm, obj.rightArm), ...
+                        predicate(predicate.clear, obj.X)
+                    };
+                    obj.del = {
+                        predicate(predicate.holding, obj.rightArm), ...
                         predicate(predicate.clear, obj.Y)
                     };
                 case obj.unstackLeft
@@ -117,19 +134,33 @@ classdef action
                         predicate(predicate.emptyArm, obj.rightArm), ...
                         predicate(predicate.clear, obj.X)
                     };
-                case obj.leave
+                case obj.leaveLeft
                     obj.precond = {
-                        predicate(predicate.holding, NaN), ...
-                        predicate(predicate.usedColsNum, true)  % TODO: is a Column available?
+                        predicate(predicate.holding, obj.leftArm), ...
+                        predicate(predicate.usedColsNum, true)
                     };
                     obj.add = {
                         predicate(predicate.onTable, obj.X), ...
-                        predicate(predicate.emptyArm, NaN), ...  % TODO: instantiate this parameter
-                        predicate(predicate.usedColsNum, true), ...
+                        predicate(predicate.emptyArm, obj.leftArm), ...
                         predicate(predicate.clear, obj.X)
+                        % predicate(predicate.usedColsNum, true), ...
                     };
                     obj.del = {
-                        predicate(predicate.holding, NaN)  % TODO: instantiate this parameter
+                        predicate(predicate.holding, obj.leftArm)
+                    };
+                case obj.leaveRight
+                    obj.precond = {
+                        predicate(predicate.holding, obj.rightArm), ...
+                        predicate(predicate.usedColsNum, true)
+                    };
+                    obj.add = {
+                        predicate(predicate.onTable, obj.X), ...
+                        predicate(predicate.emptyArm, obj.rightArm), ...
+                        predicate(predicate.clear, obj.X)
+                        % predicate(predicate.usedColsNum, true), ...
+                    };
+                    obj.del = {
+                        predicate(predicate.holding, obj.rightArm)
                     };
                 otherwise
                     error("Unknown action")
