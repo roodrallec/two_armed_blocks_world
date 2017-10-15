@@ -11,7 +11,7 @@ classdef action
         del
         
     end
-    properties (Constant, Hidden = true)
+    properties (Constant)%, Hidden = true)
         pickUpLeft = "PICK-UP-LEFT";    % with arm left, pickup block X
         pickUpRight = "PICK-UP-RIGHT";  % with arm right, pickup block X
         stackLeft = "STACK-LEFT";       % with arm left, stack block X, on block Y
@@ -29,14 +29,13 @@ classdef action
         function obj = action(name, args)
             %ACTION Construct an instance of this class
             %   Detailed explanation goes here
-           % obj.Property1 = inputArg1 + inputArg2;
-           obj.name = name;
-           obj.X = args(1);
-           if(ismember(name, [obj.stackLeft, obj.stackRight, ...
+            obj.name = name;
+            obj.X = args(1);
+            if(ismember(name, [obj.stackLeft, obj.stackRight, ...
                    obj.unstackLeft, obj.unstackRight]))
                obj.Y = args(2);
-           end
-           obj.assignconditions()
+            end
+            obj.assignconditions();
         end
         
         function obj = assignconditions(obj)
@@ -121,12 +120,12 @@ classdef action
                     };
                 case obj.unstackRight
                     obj.precond = {
-                        predicate(predicate.on, obj.X, obj.Y), ...
+                        predicate(predicate.on, [obj.X, obj.Y]), ...
                         predicate(predicate.clear, obj.X), ...
                         predicate(predicate.emptyArm, obj.rightArm)
                     };
                     obj.add = {
-                        predicate(predicate.holding, obj.X, obj.rightArm), ...
+                        predicate(predicate.holding, [obj.X, obj.rightArm]), ...
                         predicate(predicate.clear, obj.Y)
                     };
                     obj.del = {

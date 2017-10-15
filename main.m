@@ -14,6 +14,8 @@ GoalState = 'ON-TABLE(B),ON(C,B),CLEAR(C),ON-TABLE(D),ON(A,D),ON(F,A),CLEAR(F),E
 ei = state(InitialState, Blocks, MaxColumns);
 ef = state(GoalState, Blocks, MaxColumns);
 
+result = solver(ei, ef);
+
 ei.print
 ef.tostring
 
@@ -37,3 +39,7 @@ ef.ismember({pr1})
 % 1) Given a State, find all previous moves
 % 2) Find the previous moves possible
 
+% 'A*,B**,C**,D***,F*'
+% HEAVIER(D,C),HEAVIER(B,F),HEAVIER(D,B),HEAVIER(B,C),HEAVIER(C,B),HEAVIER(A,F),HEAVIER(F,A),HEAVIER(D,A),HEAVIER(C,A),HEAVIER(B,A)
+
+ei.predicates
