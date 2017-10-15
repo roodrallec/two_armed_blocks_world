@@ -1,4 +1,4 @@
-classdef predicate
+classdef predicate < handle
     %PREDICATE Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -50,14 +50,14 @@ classdef predicate
                 case obj.usedColsNum
                     obj.n = args(1);
                 case obj.heavier
-                    assert(obj.X.weight >= obj.Y.weight, ...
-                        "Block X is not heavier than Y");
                     obj.X = args(1);
                     obj.Y = args(2);
+                    assert(obj.X.weight >= obj.Y.weight, ...
+                        "Block X is not heavier than Y");
                 case obj.lightBlock
+                    obj.X = args(1);
                     assert(obj.X.weight <= obj.maxLightWeight, ...
                         "Block X is not light weighted");
-                    obj.X = args(1);
                 otherwise
                     error("Unknown predicate")
             end
