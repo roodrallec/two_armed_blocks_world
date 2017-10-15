@@ -7,12 +7,10 @@ classdef predicate
         X
         Y
         a
-        n
-        isHeavier
-        isLightBlock
-        
+        n  % logical: 1 (columns available) 0 (no columns available) 
+
     end
-    properties (Constant, Hidden = true)
+    properties (Constant)%, Hidden = true)
         onTable = "ON-TABLE";
         on = "ON";
         clear = "CLEAR";
@@ -30,6 +28,7 @@ classdef predicate
         function obj = predicate(name, args)
             %PREDICATE Construct an instance of this class
             %   Detailed explanation goes here
+            % 
             
             % disp(name)
             switch name
@@ -41,28 +40,29 @@ classdef predicate
                 case obj.clear
                     obj.X = args(1);
                 case obj.emptyArm
-                    if not(ismember(args(1), obj.armsIDs))
-                        error("The robotic arm id is not valid");
-                    end
+                    assert(ismember(args(1), obj.armsIDs), ...
+                        "The robotic arm id is not valid");
                     obj.a = args(1);
                 case obj.holding
                     obj.X = args(1);
                     obj.a = string(args(2));
+                    
                 case obj.usedColsNum
                     obj.n = args(1);
                 case obj.heavier
+                    assert(obj.X.weight >= obj.Y.weight, ...
+                        "Block X is not heavier than Y");
                     obj.X = args(1);
                     obj.Y = args(2);
-                    obj.isHeavier = obj.X.weight >= obj.Y.weight;
                 case obj.lightBlock
+                    assert(obj.X.weight <= obj.maxLightWeight, ...
+                        "Block X is not light weighted");
                     obj.X = args(1);
-                    obj.isLightBlock = obj.X.weight <= obj.maxLightWeight;
                 otherwise
                     error("Unknown predicate")
             end
             obj.name = name;
         end
-    
         function desc = print(obj)
             %PREDICATE Construct an instance of this class
             %   Detailed explanation goes here
@@ -78,11 +78,11 @@ classdef predicate
                 case obj.holding
                     printArgs = [obj.X.label, obj.a];
                 case obj.usedColsNum
-                    printArgs = obj.n;
+                    printArgs = string(obj.n);
                 case obj.heavier
-                    printArgs = [obj.X.label, obj.Y.label, obj.isHeavier];
+                    printArgs = [obj.X.label, obj.Y.label];
                 case obj.lightBlock
-                    printArgs = [obj.X.label, obj.isLightBlock];
+                    printArgs = obj.X.label;
                 otherwise
                     error("Unknown predicate")
             end
