@@ -18,8 +18,8 @@ classdef action
         stackRight = "STACK-RIGHT";     % with arm right, stack block X, on block Y
         unstackLeft = "UNSTACK-LEFT";   % with arm left, un-stack block X, from block Y
         unstackRight = "UNSTACK-RIGHT"; % with arm right, un-stack block X, from block Y
-        leaveLeft = "LEAVE-LEFT";       %  with arm left, leave block X on the table
-        leaveRight = "LEAVE-RIGHT";     %  with arm right, leave block X on the table
+        leaveLeft = "LEAVE-LEFT";       % with arm left, leave block X on the table
+        leaveRight = "LEAVE-RIGHT";     % with arm right, leave block X on the table
         
         leftArm = predicate.armsIDs(1);
         rightArm = predicate.armsIDs(2);
@@ -35,10 +35,10 @@ classdef action
                    obj.unstackLeft, obj.unstackRight]))
                obj.Y = args(2);
             end
-            obj.assignconditions();
+            obj.assignproperties();
         end
         
-        function obj = assignconditions(obj)
+        function obj = assignproperties(obj)
             switch obj.name
                 case obj.pickUpLeft
                     obj.precond = {

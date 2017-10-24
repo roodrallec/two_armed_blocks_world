@@ -40,7 +40,12 @@ classdef solver
                         action(action.leaveLeft, pred.X), ...
                         action(action.leaveRight, pred.X)
                     };
-                case predicate.pre
+                case predicate.emptyArm
+                    if(pred.a == action.leftArm)
+                    actions = {
+                            action(action.stackLeft, pred.
+                        };
+                     
                     
             
         end
