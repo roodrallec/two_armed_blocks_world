@@ -48,7 +48,7 @@ classdef action
                         predicate(predicate.lightBlock, obj.X)
                     };
                     obj.add = {
-                        predicate(predicate.holding, [obj.X, obj.leftArm])%, ...
+                        predicate(predicate.holding, {obj.X, obj.leftArm})%, ...
                         % predicate(predicate.usedColsNum, true) % is a column available?
                     };
                     obj.del = {
@@ -64,7 +64,7 @@ classdef action
                         predicate(predicate.lightBlock, obj.X)
                     };
                     obj.add = {
-                        predicate(predicate.holding, [obj.X, obj.rightArm]) %, ...
+                        predicate(predicate.holding, {obj.X, obj.rightArm}) %, ...
                         % predicate(predicate.usedColsNum, true) % is a column available?
                     };
                     obj.del = {
@@ -74,7 +74,7 @@ classdef action
                     };
                 case obj.stackLeft
                     obj.precond = {
-                        predicate(predicate.holding, [obj.X, obj.leftArm]), ...
+                        predicate(predicate.holding, {obj.X, obj.leftArm}), ...
                         predicate(predicate.clear, obj.Y), ...
                         predicate(predicate.heavier, [obj.Y, obj.X])
                     };
@@ -84,14 +84,14 @@ classdef action
                         predicate(predicate.clear, obj.X)
                     };
                     obj.del = {
-                        predicate(predicate.holding, [obj.X, obj.leftArm]), ...
+                        predicate(predicate.holding, {obj.X, obj.leftArm}), ...
                         predicate(predicate.clear, obj.Y)
                     };
                 case obj.stackRight
                     obj.precond = {
-                        predicate(predicate.holding, [obj.X, obj.rightArm]), ...
+                        predicate(predicate.holding, {obj.X, obj.rightArm}), ...
                         predicate(predicate.clear, obj.Y), ...
-                        predicate(predicate.heavier, [obj.Y, obj.X])
+                        predicate(predicate.heavier, {obj.Y, obj.X})
                     };
                     obj.add = {
                         predicate(predicate.on, [obj.X, obj.Y]), ...
@@ -99,7 +99,7 @@ classdef action
                         predicate(predicate.clear, obj.X)
                     };
                     obj.del = {
-                        predicate(predicate.holding, [obj.X, obj.rightArm]), ...
+                        predicate(predicate.holding, {obj.X, obj.rightArm}), ...
                         predicate(predicate.clear, obj.Y)
                     };
                 case obj.unstackLeft
@@ -110,7 +110,7 @@ classdef action
                         predicate(predicate.lightBlock, obj.X)
                     };
                     obj.add = {
-                        predicate(predicate.holding, [obj.X, obj.leftArm]), ...
+                        predicate(predicate.holding, {obj.X, obj.leftArm}), ...
                         predicate(predicate.clear, obj.Y)
                     };
                     obj.del = {
@@ -125,7 +125,7 @@ classdef action
                         predicate(predicate.emptyArm, obj.rightArm)
                     };
                     obj.add = {
-                        predicate(predicate.holding, [obj.X, obj.rightArm]), ...
+                        predicate(predicate.holding, {obj.X, obj.rightArm}), ...
                         predicate(predicate.clear, obj.Y)
                     };
                     obj.del = {
@@ -135,7 +135,7 @@ classdef action
                     };
                 case obj.leaveLeft
                     obj.precond = {
-                        predicate(predicate.holding, [obj.X, obj.leftArm]), ...
+                        predicate(predicate.holding, {obj.X, obj.leftArm}), ...
                         predicate(predicate.usedColsNum, true)
                     };
                     obj.add = {
@@ -145,11 +145,11 @@ classdef action
                         % predicate(predicate.usedColsNum, true), ...
                     };
                     obj.del = {
-                        predicate(predicate.holding, [obj.X, obj.leftArm])
+                        predicate(predicate.holding, {obj.X, obj.leftArm})
                     };
                 case obj.leaveRight
                     obj.precond = {
-                        predicate(predicate.holding, [obj.X, obj.rightArm]), ...
+                        predicate(predicate.holding, {obj.X, obj.rightArm}), ...
                         predicate(predicate.usedColsNum, true)
                     };
                     obj.add = {
@@ -159,7 +159,7 @@ classdef action
                         % predicate(predicate.usedColsNum, true), ...
                     };
                     obj.del = {
-                        predicate(predicate.holding, [obj.X, obj.rightArm])
+                        predicate(predicate.holding, {obj.X, obj.rightArm})
                     };
                 otherwise
                     error("Unknown action")

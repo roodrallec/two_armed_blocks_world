@@ -44,8 +44,8 @@ classdef predicate < handle
                         "The robotic arm id is not valid");
                     obj.a = args(1);
                 case obj.holding
-                    obj.X = args(1);
-                    obj.a = string(args(2));
+                    obj.X = args{1};
+                    obj.a = string(args{2});
                     
                 case obj.usedColsNum
                     obj.n = args(1);
