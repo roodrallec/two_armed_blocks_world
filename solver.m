@@ -14,8 +14,9 @@ classdef solver
             obj.initialState = initialState;
             obj.finalState = finalState;
             
-            infereactions(obj.initialState.predicates{1})
+            obj.infereactions(obj.initialState.predicates{1})
             
+            x =3; 
             
         end
         
@@ -28,27 +29,45 @@ classdef solver
                     };
                 case predicate.on
                     actions = {
-                        action(action.stackLeft, pred.X, pred.Y), ...
-                        action(action.stackRight, pred.X, pred.Y), ...
+                        action(action.stackLeft, [pred.X, pred.Y]), ...
+                        action(action.stackRight, [pred.X, pred.Y]), ...
                     };
                 case predicate.clear
                     actions = {
-                        action(action.stackLeft, pred.X, NaN), ... % partially instantiated
-                        action(action.stackRight, pred.X, NaN), ...
-                        action(action.unstackLeft, NaN, pred.X), ...
-                        action(action.unstackRight, NaN, pred.X), ...
+                        action(action.stackLeft, [pred.X, NaN]), ... % partially instantiated
+                        action(action.stackRight, [pred.X, NaN]), ...
+                        action(action.unstackLeft, [NaN, pred.X]), ...
+                        action(action.unstackRight, [NaN, pred.X]), ...
                         action(action.leaveLeft, pred.X), ...
                         action(action.leaveRight, pred.X)
                     };
                 case predicate.emptyArm
                     if(pred.a == action.leftArm)
-                    actions = {
-                            action(action.stackLeft, pred.
+                        actions = {
+                            action(action.stackLeft, [pred.X, NaN]), ...
+                            action(action.leaveLeft, pred.X)
                         };
-                     
-                    
-            
+                    elseif(pred.a == action.rightArm)
+                        actions = {
+                            action(action.stackRight, [pred.X, NaN]), ...
+                            action(action.leaveRight, pred.X)
+                        };
+                    end
+                case predicate.holding
+                    if(pred.a == action.leftArm)
+                        actions = {
+                            action(action.pickUpLeft, pred.X), ...
+                            action(action.unstackLeft, [pred.X, NaN])
+                        };
+                    elseif(pred.a == action.rightArm)
+                        actions = {
+                            action(action.pickUpRight, [pred.X, NaN]), ...
+                            action(action.unstackRight, [pred.X, NaN])
+                        };
+                    end
+                end
         end
+        % Function
     end
 end
  

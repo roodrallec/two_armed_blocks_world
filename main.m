@@ -16,6 +16,8 @@ ef = state(GoalState, Blocks, MaxColumns);
 
 result = solver(ei, ef);
 
+
+
 ei.print
 ef.tostring
 
