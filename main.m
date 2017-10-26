@@ -14,11 +14,14 @@ Blocks = 'A*,B*,C*';
 InitialState = 'ON-TABLE(C),ON-TABLE(A),ON(B,A),CLEAR(B),CLEAR(C),EMPTY-ARM(L),EMPTY-ARM(R)';
 GoalState = 'ON-TABLE(C),ON(B,C),ON(A,B),CLEAR(A),EMPTY-ARM(L),EMPTY-ARM(R)';
 
+[predicates, blocks] = parser(file);
+
+
 % Generate states
 ei = state(InitialState, Blocks, MaxColumns);
 ef = state(GoalState, Blocks, MaxColumns);
 
-result = planner(ei, ef);
+result = solver(ei, ef);
 
 
 

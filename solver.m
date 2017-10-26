@@ -15,7 +15,7 @@ classdef solver
             obj.finalState = finalState;
             
             ia = obj.infereactions(obj.finalState.predicates{2});
-            % YOU ARE HERE
+            % YOU ARE HERE        
             
         end
         
