@@ -18,7 +18,7 @@ GoalState = 'ON-TABLE(C),ON(B,C),ON(A,B),CLEAR(A),EMPTY-ARM(L),EMPTY-ARM(R)';
 ei = state(InitialState, Blocks, MaxColumns);
 ef = state(GoalState, Blocks, MaxColumns);
 
-result = solver(ei, ef);
+result = planner(ei, ef);
 
 
 
