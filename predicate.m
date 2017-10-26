@@ -10,7 +10,7 @@ classdef predicate < handle
         n  % logical: 1 (columns available) 0 (no columns available) 
 
     end
-    properties (Constant)%, Hidden = true)
+    properties (Constant, Hidden = true)
         onTable = "ON-TABLE";
         on = "ON";
         clear = "CLEAR";

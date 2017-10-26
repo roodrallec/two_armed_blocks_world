@@ -14,9 +14,8 @@ classdef solver
             obj.initialState = initialState;
             obj.finalState = finalState;
             
-            obj.infereactions(obj.initialState.predicates{1})
-            
-            x =3; 
+            ia = obj.infereactions(obj.finalState.predicates{2});
+            % YOU ARE HERE
             
         end
         

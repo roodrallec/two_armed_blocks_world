@@ -11,7 +11,7 @@ classdef action
         del
         
     end
-    properties (Constant)%, Hidden = true)
+    properties (Constant, Hidden = true)
         pickUpLeft = "PICK-UP-LEFT";    % with arm left, pickup block X
         pickUpRight = "PICK-UP-RIGHT";  % with arm right, pickup block X
         stackLeft = "STACK-LEFT";       % with arm left, stack block X, on block Y
@@ -35,7 +35,7 @@ classdef action
                    obj.unstackLeft, obj.unstackRight]))
                obj.Y = args(2);
             end
-            obj.assignproperties();
+            obj = obj.assignproperties();
         end
         
         function obj = assignproperties(obj)
@@ -91,7 +91,7 @@ classdef action
                     obj.precond = {
                         predicate(predicate.holding, {obj.X, obj.rightArm}), ...
                         predicate(predicate.clear, obj.Y), ...
-                        predicate(predicate.heavier, {obj.Y, obj.X})
+                        predicate(predicate.heavier, [obj.Y, obj.X])
                     };
                     obj.add = {
                         predicate(predicate.on, [obj.X, obj.Y]), ...
