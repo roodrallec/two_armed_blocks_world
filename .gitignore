@@ -1,5 +1,7 @@
 # Created by https://www.gitignore.io/api/macos,matlab,windows
 
+oo-approach/
+
 ### macOS ###
 *.DS_Store
 .AppleDouble
