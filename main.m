@@ -31,9 +31,9 @@ setdiff(ei.tostring, ef.tostring)
 % Compare predicates (test)
 pr1 = ei.predicates{5};
 pref = ef.predicates{4};
-pr1 == pref
+%pr1 == pref
 isequal(pr1, pref)
-cellfun(@(p) isequal(p , pref), ef.predicates) 
+cellfun(@(p) isequal(p , pr1), ef.predicates) 
 
 pr2 = ef.predicates([5,8]);
 

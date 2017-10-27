@@ -5,20 +5,37 @@ classdef solver
     properties
         initialState
         finalState
+        
+        maxIter = 100;
+        verbose = true;
     end
     
     methods
-        function obj = solver(initialState,finalState)
+        function obj = solver(initialState, finalState)
             %SOLVER Construct an instance of this class
             %   Detailed explanation goes here
             obj.initialState = initialState;
             obj.finalState = finalState;
             
-            ia = obj.infereactions(obj.finalState.predicates{2});
-            % YOU ARE HERE
-            
+            obj.engine();
+             
+        end
+        function engine(obj)
+            visitedStates = [];
+            currentState = obj.finalState;
+            iter = 1;
+            while not(currentState.isequal(obj.initialState.predicates)) ...
+                    && iter < obj.maxIter
+                disp("Iteration " + string(iter));
+                
+                ia = obj.infereactions(obj.finalState.predicates{2});
+                obj.regression(obj.finalState.predicates{2}, ia{2})
+                
+                iter = iter + 1;
+            end
         end
         
+        % Heuristics to minimze the action to iterate over
         function actions = infereactions(obj, pred)
             switch pred.name
                 case predicate.onTable
@@ -64,9 +81,33 @@ classdef solver
                             action(action.unstackRight, [pred.X, NaN])
                         };
                     end
-                end
+                otherwise
+                    actions = {};
+            end
         end
         % Function
+    end
+    methods(Static)
+        function regoutput = regression(pred, action)
+            x = 3;
+            isequal(pred,action.add(1))
+            x = action.add(1);
+            
+            
+        
+        end
+        function check = contains(obj, pred, preds)
+            % Using nested cellfuns instead of double for loops.
+            % For each p in the given predicates, check if p is equal to 
+            % any object's predicates. 
+            check = cellfun(@(p) ...
+                cellfun(@(op) isequal(op,p), preds), ...
+                preds, 'UniformOutput', false);
+            check = logical(sum(cell2mat(check'),1));
+        end
+        function check = ismember(obj, pred)
+            check = any(obj.contains(pred));
+        end
     end
 end
  
