@@ -1,7 +1,7 @@
-classdef action
+classdef Action
     %ACTION Summary of this class goes here
     %   Detailed explanation goes here
-    
+
     properties
         name
         X
@@ -9,7 +9,7 @@ classdef action
         precond
         add
         del
-        
+
     end
     properties (Constant, Hidden = true)
         pickUpLeft = "PICK-UP-LEFT";    % with arm left, pickup block X
@@ -20,11 +20,11 @@ classdef action
         unstackRight = "UNSTACK-RIGHT"; % with arm right, un-stack block X, from block Y
         leaveLeft = "LEAVE-LEFT";       % with arm left, leave block X on the table
         leaveRight = "LEAVE-RIGHT";     % with arm right, leave block X on the table
-        
+
         leftArm = predicate.armsIDs(1);
         rightArm = predicate.armsIDs(2);
     end
-    
+
     methods
         function obj = action(name, args)
             %ACTION Construct an instance of this class
@@ -37,7 +37,7 @@ classdef action
             end
             obj = obj.assignproperties();
         end
-        
+
         function obj = assignproperties(obj)
             switch obj.name
                 case obj.pickUpLeft
@@ -165,7 +165,7 @@ classdef action
                     error("Unknown action")
             end
         end
-        
+
         function outputArg = method1(obj,inputArg)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
@@ -173,4 +173,3 @@ classdef action
         end
     end
 end
-

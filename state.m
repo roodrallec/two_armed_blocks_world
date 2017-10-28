@@ -1,24 +1,24 @@
-classdef state < handle
+classdef State < handle
     %STATE Summary of this class goes here
     %   Detailed explanation goes here
-    
+
     properties
         predicates
         blocksMap
         maxColumns
     end
-    
+
     methods
         function obj = state(predicates, blocksMap, maxColumns)
             %STATE Construct an instance of this class
-            %   Detailed explanation goes here            
-            
-            
+            %   Detailed explanation goes here
+
+
             obj.maxColumns = maxColumns;
             obj.updatecolumnavailable();
             obj.addheavierpred();
             obj.addlightblockpred();
-        end        
+        end
         function str = tostring(obj)
             str = (cellfun(@(p) p.print, obj.predicates));
         end
@@ -30,8 +30,8 @@ classdef state < handle
         end
         function check = contains(obj, preds)
             % Using nested cellfuns instead of double for loops.
-            % For each p in the given predicates, check if p is equal to 
-            % any object's predicates. 
+            % For each p in the given predicates, check if p is equal to
+            % any object's predicates.
             check = cellfun(@(p) ...
                 cellfun(@(op) isequal(op,p), obj.predicates), ...
                 preds, 'UniformOutput', false);
@@ -81,7 +81,7 @@ classdef state < handle
             blockPairs = combnk(obj.blocksMap.values,2);
             heavierPreds = cellfun(@createheavierpred, blockPairs(:,1), ...
                 blockPairs(:,2), 'UniformOutput', false);
-            cellfun(@obj.add, heavierPreds)    
+            cellfun(@obj.add, heavierPreds)
         end
         function obj = addlightblockpred(obj)
             function pred = createlightblockpred(b)
@@ -95,7 +95,6 @@ classdef state < handle
                 obj.blocksMap.values, 'UniformOutput', false);
             cellfun(@obj.add, lightBlockPreds)
         end
-        
+
     end
 end
-

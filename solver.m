@@ -1,24 +1,24 @@
-classdef solver
+classdef Solver
     %SOLVER Implementation of a Non-linear pleanner with regression
     %   Detailed explanation goes here
-    
+
     properties
         initialState
         finalState
     end
-    
+
     methods
         function obj = solver(initialState,finalState)
             %SOLVER Construct an instance of this class
             %   Detailed explanation goes here
             obj.initialState = initialState;
             obj.finalState = finalState;
-            
+
             ia = obj.infereactions(obj.finalState.predicates{2});
-            % YOU ARE HERE        
-            
+            % YOU ARE HERE
+
         end
-        
+
         function actions = infereactions(obj, pred)
             switch pred.name
                 case predicate.onTable
@@ -69,4 +69,3 @@ classdef solver
         % Function
     end
 end
- 

@@ -13,7 +13,7 @@ classdef Block
     end
     
     methods
-        function obj = block(label, weight)
+        function obj = Block(label, weight)
             %BLOCK Construct an instance of this class
             %   Detailed explanation goes here            
             if (weight < obj.minWeight) || (weight > obj.maxWeight)

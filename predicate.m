@@ -1,13 +1,13 @@
-classdef predicate < handle
+classdef Predicate < handle
     %PREDICATE Summary of this class goes here
     %   Detailed explanation goes here
-    
+
     properties
         name
         X
         Y
         a
-        n  % logical: 1 (columns available) 0 (no columns available) 
+        n  % logical: 1 (columns available) 0 (no columns available)
 
     end
     properties (Constant, Hidden = true)
@@ -19,20 +19,20 @@ classdef predicate < handle
         usedColsNum = "USED-COLS-NUM";
         heavier = "HEAVIER";
         lightBlock = "LIGHT-BLOCK";
-        
+
         armsIDs = ["L", "R"];
         maxLightWeight = 1;
     end
-    
+
     methods
         function obj = predicate(name, args)
             %PREDICATE Construct an instance of this class
             %   Detailed explanation goes here
-            % 
-            
+            %
+
             % disp(name)
             switch name
-                case obj.onTable 
+                case obj.onTable
                     obj.X = args(1);
                 case obj.on
                     obj.X = args(1);
@@ -46,7 +46,7 @@ classdef predicate < handle
                 case obj.holding
                     obj.X = args{1};
                     obj.a = string(args{2});
-                    
+
                 case obj.usedColsNum
                     obj.n = args(1);
                 case obj.heavier
@@ -67,7 +67,7 @@ classdef predicate < handle
             %PREDICATE Construct an instance of this class
             %   Detailed explanation goes here
             switch obj.name
-                case obj.onTable 
+                case obj.onTable
                     printArgs = obj.X.label;
                 case obj.on
                     printArgs = [obj.X.label, obj.Y.label];
