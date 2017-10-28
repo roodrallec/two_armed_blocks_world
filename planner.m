@@ -1,32 +1,32 @@
-classdef planner
+classdef Planner
     %PLANNER Implementation of a Non-linear planner with regression
     %   Given an inital state and final state the planner builds a graph of
-    %   goal nodes linked with actions, which can then be traversed with a
+    %   goal states linked with operators, which can then be traversed with a
     %   search algorithm.
     
     properties
         initialState
-        finalState
-        searchType = 'breadth';
+        finalState        
+        finished
     end
     
     methods
-        function obj = planner(initialState, finalState)
-            %SOLVER Construct an instance of this class
-            %   Detailed explanation goes here
+        function obj = Planner(initialState, finalState)
+            %Planner 
+            %   Builds a plan from the initial to final state using goal
+            %   regression
             obj.initialState = initialState;
             obj.finalState = finalState;            
         end
         
-        function plan = run()
-            obj.finished = false;
-            rootNode = node(obj.finalState.predicates);            
-            tree = [rootNode];
+        function plan = run(obj, operators)
+            obj.finished = false;            
+            tree = {obj.finalState};
             
-            while obj.nodesLeft(tree) == true
-                node = nextNode(tree, obj.searchType);
-                obj.expandNode(tree, node);
-                children = obj.getChildren(node);
+            while obj.statesLeft(tree) > 0
+                state = obj.nextState(tree);
+                children = obj.applyOperators(state, operators);
+                tree{length(tree) + 1} = children;
                 
                 if containsState(obj.initialState, children)
                     obj.finished = true;
@@ -40,62 +40,44 @@ classdef planner
             end          
         end
         
-        function bool = nodesLeft(tree)
-            % return true if unexpanded nodes
-            expanded = cellfun(@(c) c.expanded, predicates, 'UniformOutput', false);
-            a = arrayfun(@(n) s.f2 < 30, length(s.f2));
-            s = s(a);
-            bool = tree;
+        function leftCount = statesLeft(obj, tree)
+            % return true if unexpanded states
+            leftCount = tree(cellfun(@(c) ~c.expanded, tree));
+            leftCount = length(leftCount);
         end
         
-        function actions = infereactions(obj, pred)
-            switch pred.name
-                case predicate.onTable
-                    actions = {
-                        action(action.leaveLeft, pred.X), ...
-                        action(action.leaveRight, pred.X)
-                    };
-                case predicate.on
-                    actions = {
-                        action(action.stackLeft, [pred.X, pred.Y]), ...
-                        action(action.stackRight, [pred.X, pred.Y]), ...
-                    };
-                case predicate.clear
-                    actions = {
-                        action(action.stackLeft, [pred.X, NaN]), ... % partially instantiated
-                        action(action.stackRight, [pred.X, NaN]), ...
-                        action(action.unstackLeft, [NaN, pred.X]), ...
-                        action(action.unstackRight, [NaN, pred.X]), ...
-                        action(action.leaveLeft, pred.X), ...
-                        action(action.leaveRight, pred.X)
-                    };
-                case predicate.emptyArm
-                    if(pred.a == action.leftArm)
-                        actions = {
-                            action(action.stackLeft, [pred.X, NaN]), ...
-                            action(action.leaveLeft, pred.X)
-                        };
-                    elseif(pred.a == action.rightArm)
-                        actions = {
-                            action(action.stackRight, [pred.X, NaN]), ...
-                            action(action.leaveRight, pred.X)
-                        };
-                    end
-                case predicate.holding
-                    if(pred.a == action.leftArm)
-                        actions = {
-                            action(action.pickUpLeft, pred.X), ...
-                            action(action.unstackLeft, [pred.X, NaN])
-                        };
-                    elseif(pred.a == action.rightArm)
-                        actions = {
-                            action(action.pickUpRight, [pred.X, NaN]), ...
-                            action(action.unstackRight, [pred.X, NaN])
-                        };
-                    end
-                end
+        function state = nextState(obj, tree)
+            states = tree(cellfun(@(c) ~c.expanded, tree));
+            state = states{1};
         end
-        % Function
+        
+        function children = applyOperators(obj, state, operators)
+            children = cellfun(@(op) obj.applyOperator(op, state), operators);
+        end
+        
+        function modState = applyOperator(obj, op, state)
+            modState = true;
+            newPredicates = cellfun(@(pred) obj.regression(op, pred), state.predicates);
+            % add operator preconditions to predicates
+            % apply domain knowledge
+        end
+        
+        function conditionAccepted = regression(obj, operator, condition)
+            % 1 check if condition is in operator add
+            if ismemeber operator.add, condition
+                conditionAccepted = true;
+            % 2 check that state does not have operator delete conditions
+            elseif ismemeber operator.del, condition           
+                conditionAccepted = false;
+            % 3 return the conditions in the state that are untouched
+            else
+                conditionAccepted = condition;
+            end            
+        end
+        
+        function bool = containsState(state, children)
+            bool = cellfun(@(c) state.isequal(c), children);
+        end
     end
 end
  

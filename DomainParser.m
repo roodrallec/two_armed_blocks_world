@@ -1,5 +1,5 @@
-classdef WorldDescParser
-    % WorldDescParser, a text file world description parser:
+classdef DomainParser
+    % DomainParser, a text file containing the domain description:
     %  Parses a text file containing a description of the world which
     %  consists of the max columns, blocks description, initial and final
     %  state description respectively, and provides getter methods
@@ -9,14 +9,15 @@ classdef WorldDescParser
         blocksLine
         initialStateLine
         finalStateLine
+        arms = {"L", "R"}
         delimiter = "."        
         weightToken = "*"
         predicateBracket = ")"
     end
 
     methods
-        function obj = WorldDescParser(fileName, delimiter, weightToken, predicateBracket)
-            % WorldDescParser Constructs an instance of this class
+        function obj = DomainParser(fileName, delimiter, weightToken, predicateBracket)
+            % DomainParser Constructs an instance of this class
             %  Opens the filename and stores the relevant lines as
             %  properties. optional delimiter, weight and predicateBracket
             %  modify how it parses the world description.
@@ -70,12 +71,12 @@ classdef WorldDescParser
 
         function initialState = getInitialState(obj)
             % Parses the predicates of the intial state description
-            initialState = obj.parsePredicates(obj.initialStateLine);
+            initialState = State(obj.parsePredicates(obj.initialStateLine));
         end
 
         function finalState = getFinalState(obj)
             % Parses the predicates of the final state description
-            finalState = obj.parsePredicates(obj.finalStateLine);
+            finalState = State(obj.parsePredicates(obj.finalStateLine));
         end
 
         function predicates = parsePredicates(obj, stateDesc)
@@ -85,9 +86,13 @@ classdef WorldDescParser
             predicates = cellfun(@obj.parsePredicate, predicates);
         end        
         
-        function predicate = parsePredicate(obj, predStr)            
+        function predicate = parsePredicate(obj, predStr)
             predStr = regexp(predStr, "[a-zA-Z\-\_]*", 'match');
             predicate = Predicate(predStr{1}, predStr(1, 2:end));
+        end
+        
+        function arms = getArms(obj)
+            arms = obj.arms;
         end
     end
 end
