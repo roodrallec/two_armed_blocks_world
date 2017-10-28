@@ -1,7 +1,6 @@
 % Main
 clc; clear all;
 
-
 FILE_NAME = "problem1_input.txt";
 worldDescription = WorldDescParser(FILE_NAME);
 

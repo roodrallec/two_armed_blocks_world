@@ -9,16 +9,17 @@ classdef WorldDescParser
         blocksLine
         initialStateLine
         finalStateLine
-        delimiter = '.'
-        weightToken = '*'
+        delimiter = "."        
+        weightToken = "*"
+        predicateBracket = ")"
     end
 
     methods
-        function obj = WorldDescParser(fileName, delimiter, weightToken)
+        function obj = WorldDescParser(fileName, delimiter, weightToken, predicateBracket)
             % WorldDescParser Constructs an instance of this class
             %  Opens the filename and stores the relevant lines as
-            %  properties. optional delimiter and weight modify how it
-            %  parses the world description.
+            %  properties. optional delimiter, weight and predicateBracket
+            %  modify how it parses the world description.
             if exist('delimiter','var')
                 obj.delimiter = delimiter;
             end
@@ -26,6 +27,11 @@ classdef WorldDescParser
             if exist('weightToken','var')
                 obj.weightToken = weightToken;
             end
+            
+            if exist('predicateBracket','var')
+                obj.predicateBracket = predicateBracket;
+            end
+            
             fid = fopen(fileName,'r');
             obj.maxColLine = obj.parseValue(fgetl(fid));
             obj.blocksLine = obj.parseValue(fgetl(fid));
@@ -38,7 +44,7 @@ classdef WorldDescParser
             % Parses a string with an equal sign and extracts the value to the
             % right as a string
             strVal = strsplit(line, '=');
-            strVal = strVal{2};
+            strVal = erase(strVal{2}, ";");
         end
 
         function maxColumns = getMaxCols(obj)
@@ -72,10 +78,16 @@ classdef WorldDescParser
             finalState = obj.parsePredicates(obj.finalStateLine);
         end
 
-        function predicates = parsePredicates(~, stateDesc)
-            % Parses a state description and returns a sorted list of predicates
-            predicates = regexp(stateDesc, '(?<=\)),', 'split');
-            predicates = sort(cellfun(@(p) string(p), predicates));
+        function predicates = parsePredicates(obj, stateDesc)
+            % Parses a state description and returns a sorted list of predicates            
+            regex = obj.predicateBracket + obj.delimiter;            
+            predicates = regexp(stateDesc, regex, 'split');
+            predicates = cellfun(@obj.parsePredicate, predicates);
         end        
+        
+        function predicate = parsePredicate(obj, predStr)            
+            predStr = regexp(predStr, "[a-zA-Z\-\_]*", 'match');
+            predicate = Predicate(predStr{1}, predStr(1, 2:end));
+        end
     end
 end
