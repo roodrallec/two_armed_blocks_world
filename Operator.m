@@ -12,14 +12,13 @@ classdef Operator
     methods
         function obj = Operator(label, preConditions, add, del)
             obj.label = label;
-            obj.preConditions = preConditions;
-            obj.add = add;
-            obj.del = del;
+            obj.preConditions = [preConditions{:}];
+            obj.add = [add{:}];
+            obj.del = [del{:}];
         end        
         
         function state = apply(obj, state)
-            [operator.preConditions{:}] 
-            [state.predicates.label]
+            
         end
     end
 end

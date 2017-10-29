@@ -5,6 +5,7 @@ classdef Predicate
     properties
         label
         args        
+        string
     end
     
     methods
@@ -22,15 +23,16 @@ classdef Predicate
             end            
             
             obj.args = char(strjoin(args, ";"));
-            disp(obj.toString());
+            obj.string = obj.toString();
+            disp(obj.string);
         end
         
-        function bool = eq(obj, predicate)            
-            bool = strcmp(obj.toString(), predicate.toString());
+        function bool = eq(obj, predicate)                       
+            bool = any(contains([predicate.string], obj.string));
         end 
         
         function string = toString(obj)
-            string = strjoin({obj.label, obj.args}, "=");
+            string = strjoin({obj.label, obj.args}, "=") + ";";
         end
     end
 end

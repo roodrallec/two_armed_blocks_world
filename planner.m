@@ -57,17 +57,20 @@ classdef Planner
         
         function modState = applyOperator(obj, op, state)
             modState = true;
-            newPredicates = arrayfun(@(pred) obj.regression(op, pred), state.predicates);
+            newPredicates = arrayfun(...
+                @(pred) obj.regression(op, pred), state.predicates,...
+                'UniformOutput', false...
+            );
             % add operator preconditions to predicates
             % apply domain knowledge
         end
         
-        function conditionAccepted = regression(obj, operator, condition)
+        function conditionAccepted = regression(obj, operator, condition)             
             % 1 check if condition is in operator add            
-            if (ismember(condition, [operator.add{:}]))
+            if (ismember(condition, operator.add))
                 conditionAccepted = true;
             % 2 check that state does not have operator delete conditions
-            elseif (ismember(condition, [operator.del{:}]))
+            elseif (ismember(condition, operator.del))
                 conditionAccepted = false;
             % 3 return the conditions in the state that are untouched
             else
