@@ -5,7 +5,6 @@ classdef Planner
     %   search algorithm.
     properties
         operators
-        finished
     end
 
     methods
@@ -17,21 +16,21 @@ classdef Planner
         end
 
         function plan = buildPlan(obj, initialState, finalState)
-            obj.finished = false;
-            tree = [obj.finalState];
+            finished = false;
+            tree = [finalState];
 
             while obj.statesLeft(tree) > 0
                 state = obj.nextState(tree);
-                children = obj.applyOperators(state, operators);
+                children = obj.applyOperators(state);
                 tree = [tree, children];
 
-                if ismember(obj.initialState, children)
-                    obj.finished = true;
+                if ismember(initialState, children)
+                    finished = true;
                     plan = tree;
                 end
             end
 
-            if obj.finished == false
+            if finished == false
                 error('No way could be found to reach Ei from Ef');
             end
         end
@@ -47,11 +46,11 @@ classdef Planner
             state = states(1);
         end
 
-        function children = applyOperators(obj, state, operators)
+        function children = applyOperators(obj, state)
             % build the possible children states.
             children = [];
-            for o = 1:length(operators)
-                operator = operators(o);
+            for o = 1:length(obj.operators)
+                operator = obj.operators(o);
                 newPredicates = [operator.preConditions];
 
                 for p = 1:length(state.predicates)
@@ -63,7 +62,7 @@ classdef Planner
                     end
 
                     if (class(condition) == "Predicate")
-                        newPredicates = [newPredicates, condition]
+                        newPredicates = [newPredicates, condition];
                     end
                 end
 
@@ -71,7 +70,7 @@ classdef Planner
                     continue
                 end
 
-                children = [children, State(newPredicates)]
+                children = [children, State(newPredicates)];
             end
             state.expanded = true;
         end

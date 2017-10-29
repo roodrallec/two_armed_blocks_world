@@ -27,42 +27,32 @@ function operators = buildOperators(arms, blocks, maxCols, weakArm)
                 % Some operators depend on the columns too, we apply
                 % those conditions here
                 %% "PICK-UP" operators are built
-                pickupOperator = BlockOperator("PICK-UP", arm, block1, "", c);
                 % The relevant preconditions added
-                pickupOperator.addPre(Predicate("ON-TABLE", block1));
-                pickupOperator.addPre(Predicate("CLEAR", block1));
-                pickupOperator.addPre(Predicate("EMPTY-ARM", arm));
-                pickupOperator.addPre(Predicate("USED-COLS-NUM", c));
                 % Weak arm rule check
-                if (arm == weakArm)
-                    pickupOperator.addPre(Predicate("LIGHT-BLOCK", block1));
-                end
                 % The relevent add conditions added
-                pickupOperator.addAdd(Predicate("HOLDING", [block1, arm]));
-                pickupOperator.addAdd(Predicate("USED-COLS-NUM", c-1));
                 % The relevant del conditions added
-                pickupOperator.addDel(Predicate("ON-TABLE", block1));
-                pickupOperator.addDel(Predicate("CLEAR", block1));
-                pickupOperator.addDel(Predicate("EMPTY-ARM", arm));
-                % Once the operator is build its added to the Operators array
+                % The operator is built and is added to the Operators array
+                pickupOperator = BlockOperator("PICK-UP", arm, block1, "", c);
+                pickupOperator.preConditions = [Predicate("ON-TABLE", block1), Predicate("CLEAR", block1), Predicate("EMPTY-ARM", arm), Predicate("USED-COLS-NUM", c)];
+                if (arm == weakArm)
+                    pickupOperator.preConditions = [pickupOperator.preConditions, Predicate("LIGHT-BLOCK", block1)];
+                end
+                pickupOperator.add = [Predicate("HOLDING", [block1, arm]), Predicate("USED-COLS-NUM", c-1)];
+                pickupOperator.del = [Predicate("ON-TABLE", block1), Predicate("CLEAR", block1), Predicate("EMPTY-ARM", arm)];
                 operators = [operators, pickupOperator];
                 %% "LEAVE" operators are built
                 % Here rule 2 is applied to ensure the max col limit
+                % The relevant preconditions added
+                % The relevent add conditions added
+                % The relevant del conditions added
+                % Once the operator is built it's added to the Operators array
                 if (c == maxCols)
                     continue
                 end
                 leaveOperator = BlockOperator("LEAVE", arm, block1, "", c+1);
-                % The relevant preconditions added
-                leaveOperator.addPre(Predicate("HOLDING", [block1, arm]));
-                leaveOperator.addPre(Predicate("USED-COLS-NUM", c));
-                % The relevent add conditions added
-                leaveOperator.addAdd(Predicate("ON-TABLE", block1));
-                leaveOperator.addAdd(Predicate("EMPTY-ARM", arm));
-                leaveOperator.addAdd(Predicate("USED-COLS-NUM", c+1));
-                leaveOperator.addAdd(Predicate("CLEAR", block1));
-                % The relevant del conditions added
-                leaveOperator.addDel(Predicate("HOLDING", [block1, arm]));
-                % Once the operator is build its added to the Operators array
+                leaveOperator.preConditions = [Predicate("HOLDING", [block1, arm]), Predicate("USED-COLS-NUM", c)];
+                leaveOperator.add = [Predicate("ON-TABLE", block1), Predicate("EMPTY-ARM", arm), Predicate("USED-COLS-NUM", c+1), Predicate("CLEAR", block1)];
+                leaveOperator.del = [Predicate("HOLDING", [block1, arm])];
                 operators = [operators, leaveOperator];
             end
 
@@ -74,38 +64,28 @@ function operators = buildOperators(arms, blocks, maxCols, weakArm)
                     continue
                 end
                 %% Here the "STACK" operators are built
-                stackOperator = BlockOperator("STACK", arm, block1, block2, []);
                 % The relevant preconditions added
-                stackOperator.addPre(Predicate("HOLDING", [block1, arm]));
-                stackOperator.addPre(Predicate("CLEAR", block2));
-                stackOperator.addPre(Predicate("HEAVIER", {block2, block1}));
                 % The relevent add conditions added
-                stackOperator.addAdd(Predicate("ON", {block1, block2}));
-                stackOperator.addAdd(Predicate("EMPTY-ARM", arm));
-                stackOperator.addAdd(Predicate("CLEAR", block1));
                 % The relevant del conditions added
-                stackOperator.addDel(Predicate("HOLDING", [block1, arm]));
-                stackOperator.addDel(Predicate("CLEAR", block2));
                 % Once the operator is build its added to the Operators array
+                stackOperator = BlockOperator("STACK", arm, block1, block2, "");
+                stackOperator.preConditions = [Predicate("HOLDING", [block1, arm]), Predicate("CLEAR", block2), Predicate("HEAVIER", {block2, block1})];
+                stackOperator.add = [Predicate("ON", {block1, block2}), Predicate("EMPTY-ARM", arm), Predicate("CLEAR", block1)];
+                stackOperator.del = [Predicate("HOLDING", [block1, arm]), Predicate("CLEAR", block2)];
                 operators = [operators, stackOperator];
                 %% Here the "UN-STACK" operators are built
-                unStackOperator = BlockOperator("UN-STACK", arm, block1, block2, []);
                 % The relevant preconditions added
-                unStackOperator.addPre(Predicate("ON", {block1, block2}));
-                unStackOperator.addPre(Predicate("CLEAR", block1));
-                unStackOperator.addPre(Predicate("EMPTY-ARM", arm));
                 % Weak arm rule check
-                if (arm == weakArm)
-                    unStackOperator.addPre(Predicate("LIGHT-BLOCK", block1));
-                end
                 % The relevent add conditions added
-                unStackOperator.addAdd(Predicate("HOLDING", [block1, arm]));
-                unStackOperator.addAdd(Predicate("CLEAR", block2));
                 % The relevant del conditions added
-                unStackOperator.addDel(Predicate("ON", {block1, block2}));
-                unStackOperator.addDel(Predicate("EMPTY-ARM", arm));
-                unStackOperator.addDel(Predicate("CLEAR", block1));
                 % Once the operator is build its added to the Operators array
+                unStackOperator = BlockOperator("UN-STACK", arm, block1, block2, "");
+                unStackOperator.preConditions = [Predicate("ON", {block1, block2}), Predicate("CLEAR", block1), Predicate("EMPTY-ARM", arm)];
+                if (arm == weakArm)
+                    unStackOperator.preConditions = [unStackOperator.preConditions, Predicate("LIGHT-BLOCK", block1)];
+                end
+                unStackOperator.add = [Predicate("HOLDING", [block1, arm]), Predicate("CLEAR", block2)];
+                unStackOperator.del = [Predicate("ON", {block1, block2}), Predicate("EMPTY-ARM", arm), Predicate("CLEAR", block1)];
                 operators = [operators, unStackOperator];
             end
         end

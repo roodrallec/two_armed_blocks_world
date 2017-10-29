@@ -15,17 +15,17 @@ classdef Operator
             obj.preConditions = [];
             obj.add = [];
             obj.del = [];
-        end
+        end        
 
-        function addPre(obj, preCondition)
+        function obj = addPre(obj, preCondition)
           obj.preConditions = [obj.preConditions, preCondition];
         end
 
-        function addAdd(obj, addCondition)
+        function obj = addAdd(obj, addCondition)
           obj.add = [obj.add, addCondition];
         end
 
-        function addDel(obj, delCondition)
+        function obj = addDel(obj, delCondition)
           obj.del = [obj.del, delCondition];
         end
     end

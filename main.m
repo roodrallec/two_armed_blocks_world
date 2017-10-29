@@ -13,17 +13,19 @@ LIGHT_WEIGHT = 1;
 WEAK_ARM = "L";
 % Operators that can be applied to states
 OPERATORS = buildOperators(ARMS, BLOCKS, MAX_COLS, WEAK_ARM);
-cell2table({OPERATORS.name; OPERATORS.arm; OPERATORS.block1;...
-    OPERATORS.block2; OPERATORS.cols})
+% Visualise an operator table
+cell2table({ OPERATORS.name; OPERATORS.arm; OPERATORS.block1;...
+    OPERATORS.block2; OPERATORS.cols;...
+    OPERATORS.preConditions; OPERATORS.add; OPERATORS.del })
 
 %% PLanner to build the path from stateA to stateB through goal regression
 planner = Planner(OPERATORS);
-%%Construct initial and final state
+%% Construct initial and final state
+initialState = domain.getInitialState();
+finalState = domain.getFinalState();
 % Predicates that are added to apply domain knowledge
 domainPredicates = buildDomainPredicates(BLOCKS, LIGHT_WEIGHT);
-initialState = parser.getInitialState();
 initialState.predicates = [initialState.predicates, domainPredicates];
-finalState = parser.getFinalState();
 finalState.predicates = [finalState.predicates, domainPredicates];
 % Build the plan
 plan = planner.buildPlan(initialState, finalState);
