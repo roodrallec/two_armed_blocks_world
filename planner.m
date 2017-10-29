@@ -19,7 +19,7 @@ classdef Planner
             obj.finalState = finalState;            
         end
         
-        function plan = run(obj, operators)
+        function plan = buildPlan(obj, operators)
             obj.finished = false;            
             tree = {obj.finalState};
             
@@ -52,22 +52,22 @@ classdef Planner
         end
         
         function children = applyOperators(obj, state, operators)
-            children = cellfun(@(op) obj.applyOperator(op, state), operators);
+            children = arrayfun(@(op) obj.applyOperator(op, state), operators);
         end
         
         function modState = applyOperator(obj, op, state)
             modState = true;
-            newPredicates = cellfun(@(pred) obj.regression(op, pred), state.predicates);
+            newPredicates = arrayfun(@(pred) obj.regression(op, pred), state.predicates);
             % add operator preconditions to predicates
             % apply domain knowledge
         end
         
         function conditionAccepted = regression(obj, operator, condition)
-            % 1 check if condition is in operator add
-            if ismemeber operator.add, condition
+            % 1 check if condition is in operator add            
+            if (ismember(condition, [operator.add{:}]))
                 conditionAccepted = true;
             % 2 check that state does not have operator delete conditions
-            elseif ismemeber operator.del, condition           
+            elseif (ismember(condition, [operator.del{:}]))
                 conditionAccepted = false;
             % 3 return the conditions in the state that are untouched
             else

@@ -10,9 +10,27 @@ classdef Predicate
     methods
         function obj = Predicate(label, args)
             % PREDICATE Construct an instance of this class
-            %   Detailed explanation goes here
-            obj.label = label;
-            obj.args = args;            
+            %   Detailed explanation goes here            
+            obj.label = char(label);
+            % type check             
+            if (class(args) == "double")
+               args = num2str(args); 
+            end
+            
+            if (class(args) ~= "cell" && class(args) ~= "string")
+                args = {args};
+            end            
+            
+            obj.args = char(strjoin(args, ";"));
+            disp(obj.toString());
+        end
+        
+        function bool = eq(obj, predicate)            
+            bool = strcmp(obj.toString(), predicate.toString());
+        end 
+        
+        function string = toString(obj)
+            string = strjoin({obj.label, obj.args}, "=");
         end
     end
 end
