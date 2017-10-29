@@ -1,10 +1,10 @@
 classdef State
     %STATE Summary of this class goes here
     %   Detailed explanation goes here
-
     properties
         predicates
-        from        
+        children
+        string
         expanded = false
     end
 
@@ -12,13 +12,12 @@ classdef State
         function obj = State(predicates)
             % STATE Construct an instance of this class
             %   Detailed explanation goes here
-            obj.predicates = predicates;            
-        end        
-        
-        function bool = isequal(obj, state)
-            % Checks whether it contains the same conditions
-            % as the state passed in and returns true or false
-           bool = true;
+            obj.predicates = predicates;
+            obj.string = strjoin([predicates.string]);
+        end
+
+        function bool = eq(obj, state)
+            bool = any(contains([state.string], obj.string));
         end
     end
 end

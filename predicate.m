@@ -23,8 +23,7 @@ classdef Predicate
             end            
             
             obj.args = char(strjoin(args, ";"));
-            obj.string = obj.toString();
-            disp(obj.string);
+            obj.string = obj.toString();            
         end
         
         function bool = eq(obj, predicate)                       

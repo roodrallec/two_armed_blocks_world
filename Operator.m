@@ -7,18 +7,26 @@ classdef Operator
         preConditions
         add
         del
-    end    
+    end
 
     methods
-        function obj = Operator(label, preConditions, add, del)
+        function obj = Operator(label)
             obj.label = label;
-            obj.preConditions = [preConditions{:}];
-            obj.add = [add{:}];
-            obj.del = [del{:}];
-        end        
-        
-        function state = apply(obj, state)
-            
+            obj.preConditions = [];
+            obj.add = [];
+            obj.del = [];
+        end
+
+        function addPre(obj, preCondition)
+          obj.preConditions = [obj.preConditions, preCondition];
+        end
+
+        function addAdd(obj, addCondition)
+          obj.add = [obj.add, addCondition];
+        end
+
+        function addDel(obj, delCondition)
+          obj.del = [obj.del, delCondition];
         end
     end
 end
