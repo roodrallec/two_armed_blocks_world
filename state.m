@@ -1,10 +1,8 @@
-classdef State
+classdef State < handle
     %STATE Summary of this class goes here
     %   Detailed explanation goes here
     properties
-        predicates
-        children
-        string
+        predicates                
         expanded = false
     end
 
@@ -13,11 +11,10 @@ classdef State
             % STATE Construct an instance of this class
             %   Detailed explanation goes here
             obj.predicates = predicates;
-            obj.string = strjoin([predicates.string]);
         end
 
-        function bool = eq(obj, state)
-            bool = any(contains([state.string], obj.string));
+        function string = toString(obj)
+            string = strjoin(sort([obj.predicates.string]));
         end
     end
 end

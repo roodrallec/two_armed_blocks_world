@@ -1,4 +1,4 @@
-classdef Operator
+classdef Operator < handle
     %OPERATOR Summary of this class goes here
     %   Detailed explanation goes here
 
@@ -15,18 +15,6 @@ classdef Operator
             obj.preConditions = [];
             obj.add = [];
             obj.del = [];
-        end        
-
-        function obj = addPre(obj, preCondition)
-          obj.preConditions = [obj.preConditions, preCondition];
-        end
-
-        function obj = addAdd(obj, addCondition)
-          obj.add = [obj.add, addCondition];
-        end
-
-        function obj = addDel(obj, delCondition)
-          obj.del = [obj.del, delCondition];
         end
     end
 end
