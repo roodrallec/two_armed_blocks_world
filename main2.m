@@ -1,97 +1,135 @@
 clc, clear all;
 
 %% Main
-loadconstants
+inputFiles = dir('testing*.txt');
+for filename = {inputFiles.name}
+    % Load Input
+    [MaxColumns, blockWeight, ei, ef] = DomainParser(filename{:});
+    outputFile = strrep(filename{:}, "testing", "output_testing");
+    
+    % Execute Solver
+    solverOutput = solver(MaxColumns, blockWeight, ei, ef);
+    
+    % Save output
+    fid=fopen(outputFile,'w');
+    fprintf(fid, solverOutput);
+    fclose(fid);
+    
+end
 
-%[MaxColumns, blockWeight, ei, ef] = DomainParser('testing1.txt');
-[MaxColumns, blockWeight, ei, ef] = DomainParser('testing2.txt');
 
 %% Solver
-maxIter = 500;
-Q = {{ef}};
-visitedStates = {ef};
-P = {{}};
-done = false;
-iter = 1;
-while not(done) && not(isempty(Q)) && iter <= maxIter
-    disp("Iteration: " + string(iter))
-    prevStateSeq = Q{1};    
-    prevState = prevStateSeq{1};
-    Q = Q(2:end);
-    prevPSeq = P{1};
-    P = P(2:end);
-    disp("prevAction: " + join(prevPSeq,','));
-    disp("prevState: " + join(prevState,','));
+function output = solver(MaxColumns, blockWeight, ei, ef)
+    % Solver function implements the Breadth-First Search algorithm for 
+    % finding the shortest path from the final state to the initial state.
     
-    % Expand Node (Possible actions that lead to the state)
-    % Infere valid actions from state
-    proposedActionDesc = [];
-    for p = prevState
-        actions = inferaction(p, prevState, blockWeight);
-        proposedActionDesc = [proposedActionDesc actions];
-    end
-    proposedActionDesc = unique(proposedActionDesc(proposedActionDesc > ""));
-    disp("  Proposed Act: " + join(proposedActionDesc,','));
+    % Initialisation
+    maxIter = 500;
+    Q = {{ef}};
+    visitedStates = {ef};
+    P = {{}};
+    done = false;
+    output_main = []; output_detail = []; 
+    iter = 1; ii = 0; nn = 0;
     
-    % Generate action predicates
-    for actDesc = proposedActionDesc
-        disp("    Action: " + actDesc)
-        [prec, add, del] = action(actDesc, prevState, blockWeight);
-  
-        % Apply generation function
-        regoutput = arrayfun(@(p) regression(p, add, del), prevState);
+    while not(done) && not(isempty(Q)) && iter <= maxIter
+        disp("Iteration: " + string(iter))
+        prevStateSeq = Q{1};    
+        prevState = prevStateSeq{1};
+        Q = Q(2:end);
+        prevPSeq = P{1};
+        P = P(2:end);
+        disp("Previous Actions: " + join(prevPSeq,','));
+        disp("Current State: " + join(prevState,','));
 
-        % if FALSE in regoutput, discard operator
-        % else Feasible Action, it is a good candidate
-        if ismember("FALSE", regoutput)
-            continue
-        else
-            % NextState = [ActionPrec + RegFunOutput]
-            regoutput = regoutput(not(regoutput == "TRUE"));
-            nextState = sort(unique([prec regoutput]));
-            disp("      Next State: " + join(nextState,','));
-            
-            % Check if already visited state
-            if any(cellfun(@(s) isequal(nextState, s), visitedStates))
-                disp("        Already visited state");
+        % Expand State: infere all feasible actions which may lead to the 
+        % current state
+        proposedActionDesc = [];
+        for pred = prevState
+            actions = inferaction(pred, prevState, blockWeight, MaxColumns);
+            proposedActionDesc = [proposedActionDesc actions];
+        end
+        proposedActionDesc = unique(proposedActionDesc(proposedActionDesc > ""));
+        disp("  Proposed Actions: " + join(proposedActionDesc,','));
+
+        % Analise feasible actions 
+        for actDesc = proposedActionDesc
+            disp("    Analising: " + actDesc)
+            [prec, add, del] = action(actDesc, prevState, blockWeight);
+
+            % Apply regression function
+            regoutput = arrayfun(@(p) regression(p, add, del), prevState);
+
+            % Discard actions
+            % Note that the heuristics used in infereaction function
+            % reduces the discarded actions
+            if ismember("FALSE", regoutput)
                 continue
             else
-                visitedStates = {visitedStates{:}, nextState};
-            end
-            
-            % Add State node
-            nextStateSeq = [{nextState} prevStateSeq];
-            Q = {Q{:} nextStateSeq};
-            % Add Plan node
-            nextPSeq = [actDesc prevPSeq];
-            P = {P{:} nextPSeq};
+                % Next state = Action Preconditions + Regression Function
+                regoutput = regoutput(not(regoutput == "TRUE"));
+                nextState = sort(unique([prec regoutput]));
+                ii = ii + 1; 
+                disp("      Next State: " + join(nextState,','));
 
-            % Check if Goal state is achieved
-            if isequal(nextState, ei)
-                disp("DONE! Plan: " + join(P{end}, ','));
-                done = true;
-                break
+                % Check if next state was previously generated
+                if any(cellfun(@(s) isequal(nextState, s), visitedStates))
+                    disp("        State already visited");
+                    output_detail = [output_detail ...
+                        join(nextState,',') ...
+                        "repeated state" ...
+                        "-------------"];
+                    continue
+                else
+                    visitedStates = {visitedStates{:}, nextState};
+                end
+
+                % Add next State to the States queue
+                nextStateSeq = [{nextState} prevStateSeq];
+                Q = {Q{:} nextStateSeq};
+                % Add Action to the plan queue
+                nextPSeq = [actDesc prevPSeq];
+                P = {P{:} nextPSeq};
+
+                % Check if Goal state is achieved
+                if isequal(nextState, ei)
+                    disp("DONE!");
+                    done = true;
+                    break
+                end
             end
         end
+        iter = iter + 1;
     end
-
-    iter = iter + 1;
+    if done
+        nn = length(P{end});
+        disp("Number of operators: " + string(nn))
+        disp("Number of states generated: " + string(ii))
+        disp("Plan: " + join(P{end}, ','))
+        output_main = [string(nn) string(ii) join(P{end}, ',') ...
+            "-------------"];
+    elseif isempty(Q)
+        warning("Plan not found. There is no way to reach the Goal State")
+    elseif iter > maxIter
+        warning("Max number of iterations reached!")
+    end
+    
+    % Output file content
+    EOL = '\r\n';
+    output = join(output_main, EOL) + EOL + join(output_detail, EOL);
 end
 
 %% Functions
 function [MaxColumns, Blocks, InitialState, GoalState] = DomainParser(fileName)
-    % DomainParser Constructs an instance of this class
-    %  Opens the filename and stores the relevant lines as
-    %  properties.
+    % DomainParser function opens the filename and stores the 
+    % relevant lines as variables.
     
     delimiter = ".";
     weightToken = "*";
 
     function strVal = parseValue(line)
-            % Parses a string with an equal sign and extracts the value to the
-            % right as a string
-            strVal = strsplit(line, '=');
-            strVal = erase(strVal{2}, ";");
+        strVal = strsplit(line, '=');
+        strVal = erase(strVal{2}, ";");
     end
 
     function state = parseState(stateDesc)
@@ -106,6 +144,7 @@ function [MaxColumns, Blocks, InitialState, GoalState] = DomainParser(fileName)
             cellfun(@(e) count(e(2:end), weightToken), blocksDefElems));
     end
 
+    % Read file lines
     fid = fopen(fileName,'r');
     maxColLine = parseValue(fgetl(fid));
     blocksLine = parseValue(fgetl(fid));
@@ -113,6 +152,7 @@ function [MaxColumns, Blocks, InitialState, GoalState] = DomainParser(fileName)
     finalStateLine = parseValue(fgetl(fid));           
     fclose(fid);
     
+    % Generate variables 
     MaxColumns = str2num(maxColLine);
     Blocks = parseBlocks(blocksLine);
     InitialState = parseState(initialStateLine);
@@ -121,6 +161,10 @@ function [MaxColumns, Blocks, InitialState, GoalState] = DomainParser(fileName)
 end
 
 function regout = regression(pred, add, del)
+    % Regression function used in the non-linear planner with regression
+    % Returns "TRUE" if the predicate is in the add section of the action,
+    % "FALSE" if the predicate is in the delete section or the predicate
+    % itself if none of the above conditions are met. 
     if ismember(pred, add)
         regout = "TRUE";
     elseif ismember(pred, del)
@@ -130,38 +174,44 @@ function regout = regression(pred, add, del)
     end
 end
 
-function actions = inferaction(pred, state, blockWeight)
+function actions = inferaction(pred, state, blockWeight, MaxColumns)
+    % Given a predicate of a state, the inferactions returns all feasible
+    % actions that could generate the predicate or be compatible with it.
+    % It implements the Domain Knowledge as a set of rules that are 
+    % It can be seen as a enhanced regression function which uses the
+    % context of the state
     loadconstants
     actions = [""];
     [name, args] = decompose(pred);
     switch name
         case ONTABLE
+            % ONTABLE(X) + ARM available + Nothing ON X <= LEAVE(X) 
             checkEmptyArm = ~isempty(infereArm(blockWeight, state, args));
             checkOn = any(contains(state(contains(state, "ON(")), args(1) + ")"));
             if checkEmptyArm && not(checkOn)
                 actions = compose(LEAVE, args);
             end
         case ON
+            % ON(X,Y) + HEAVER(Y,X) + ARM available <= STACK(X,Y)
+            % Avoid precondiction incompatibility:
+            % ON(p,X) is incompatible with HOLDING(X,a)
             checkHeavier = isheavier(blockWeight,args(2), args(1));
-            % Check if state contains ON(p,X). Incompatible with HOLDING(X)
-            % [precondition incompatible with state]
             checkOn = not(any(contains(state(contains(state, "ON(")), args(1) + ")")));
             checkArm = not(isempty(infereArm(blockWeight,state,args(1))));
             if checkHeavier && checkOn && checkArm
                 actions = compose(STACK, args);
             end
         case CLEAR
-            % FIND 
             %  CLEAR(Y) + HOLDING(X,L) + HEAVIER(Y,X) <= UNSTACK-LEFT(X,Y)
             %  CLEAR(Y) + HOLDING(X,R) + HEAVIER(Y,X) <= UNSTACK-RIGHT(X,Y)
-            
-            % if state contains HOLDING(Y,L) or HOLDING(Y,R) skip
-            % avoid stacking on arms
             if not(any(contains(state, compose(HOLDING, [args RIGHTARM]))) ...
-                    || any(contains(state, compose(HOLDING, [args LEFTARM]))))     
+                    || any(contains(state, compose(HOLDING, [args LEFTARM]))))
+                % If state contains HOLDING(Y,L) or HOLDING(Y,R) skip
+                % (avoids stacking on arms)
                 for p = state
                     [n, a] = decompose(p);
-                    if n == HOLDING && not(a(1) == args) && isheavier(blockWeight, args, a(1))
+                    if n == HOLDING && not(a(1) == args) ...
+                            && isheavier(blockWeight, args, a(1))
                         if a(2) == LEFTARM
                             actions = compose(UNSTACKLEFT, [a(1) args]);
                         elseif a(2) == RIGHTARM
@@ -171,35 +221,45 @@ function actions = inferaction(pred, state, blockWeight)
                 end
             end
         case EMPTYARM
-            % FIND 
-            %  CLEAR(X) + ON(X,Y) <= STACK(X,Y)
-            %  CLEAR(X) + ON-TABLE(X) + ARM available <= LEAVE(X)
+            %  EMPTYARM + CLEAR(X) + ON(X,Y) <= STACK(X,Y)
+            %  EMPTYARM + CLEAR(X) + ON-TABLE(X) + ARM available <= LEAVE(X)
             clearArgs = [];
             for p = state
                 [n, a] = decompose(p);
                 if n == CLEAR
                     clearArgs = [clearArgs a];
-                elseif n == ON && ismember(a(1), clearArgs) && args == infereArm(blockWeight, state, a(1))  % and the X of ON(X,Y) is CLEAR
+                elseif n == ON ...
+                        && ismember(a(1), clearArgs) ...
+                        && args == infereArm(blockWeight, state, a(1))
                     actions = [actions compose(STACK, a)];
-                elseif n == ONTABLE && ismember(a, clearArgs) && args == infereArm(blockWeight, state, a)  %
+                elseif n == ONTABLE ...
+                        && ismember(a, clearArgs) ...
+                        && args == infereArm(blockWeight, state, a)
                     actions = [actions compose(LEAVE, a)];
                 end
             end
         case HOLDING
-            % If columns available, could be from PICKUP
-            if iscolavailable(state)
+            % HOLDING(X,L) + COLS available = PICK-UP-LEFT(X)
+            % HOLDING(X,R) + COLS available = PICK-UP-RIGHT(X)
+            iscolavailable = sum(count(state, ONTABLE)) < MaxColumns;
+            if iscolavailable
                 if args(2) == LEFTARM
                     actions = compose(PICKUPLEFT, args(1));
                 elseif args(2) == RIGHTARM
                     actions = compose(PICKUPRIGHT, args(1));
                 end
             end
-            % Or If CLEAR(Y), could be from UNSTACK. This case in CLEAR
+            % Or if CLEAR(Y), could be from UNSTACK. 
+            % That case in the CLEAR section
+            
     end
     % disp(pred + " => " + join(actions,','));  % DEBUG
+    
 end
 
 function inferedArm = infereArm(blockWeight, state, X)
+    % Given a block and the state, the function returns what arm to be used
+    % It checks if the there is arms available and the weight of the block.
     loadconstants
     inferedArm = '';
     checkLight = islightblock(blockWeight, X);
@@ -213,6 +273,8 @@ function inferedArm = infereArm(blockWeight, state, X)
 end
 
 function [predName, predArgs] = decompose(predDesc)
+    % Utility function to split the Predicate or Operator string into
+    % 2 strings: Name and vector of arguments. 
     predElems = regexp(erase(predDesc, ')'), '\(|,', 'split');
     predString = cellfun(@(p) string(p), predElems);
     predName = predString(1);
@@ -220,117 +282,69 @@ function [predName, predArgs] = decompose(predDesc)
 end
 
 function predDesc = compose(predName, predArgs)
+    % Inverse of decompose function. Given the Name and the vector of 
+    % arguments, it returns the string that defines the predicate/operator
     predDesc = predName + "(" + join(predArgs, ',') + ")";
 end
 
 function [precond, add, del] = action(actDesc, state, blockWeight)
+    % Given the Action description it returns the preconditions, add and
+    % delete predicates. It uses information about the State in order to
+    % infere the arm that can do the operation.
     loadconstants
     [actName, actArgs] = decompose(actDesc);
     X = actArgs(1);
     if(size(actArgs, 2) > 1)
         Y = actArgs(2);
     end
-    
     % Infere Arm to be used
     inferedArm = infereArm(blockWeight, state, X);
-    
     switch actName
         case PICKUPLEFT
-            precond = [
-                compose(ONTABLE, X) ...
-                compose(EMPTYARM, LEFTARM) ...
-                compose(CLEAR, X)
-            ];
-            add = [
-                compose(HOLDING, [X LEFTARM])
-            ];
-            del = [
-                compose(ONTABLE, X) ...
-                compose(EMPTYARM, LEFTARM)
-            ];
+            precond = [compose(ONTABLE, X) compose(EMPTYARM, LEFTARM) ...
+                compose(CLEAR, X)];
+            add = [compose(HOLDING, [X LEFTARM])];
+            del = [compose(ONTABLE, X) compose(EMPTYARM, LEFTARM)];
         case PICKUPRIGHT
-            precond = [
-                compose(ONTABLE, X) ...
-                compose(EMPTYARM, RIGHTARM) ...
-                compose(CLEAR, X)
-            ];
-            add = [
-                compose(HOLDING, [X, RIGHTARM])
-            ];
-            del = [
-                compose(ONTABLE, X) ...
-                compose(EMPTYARM, RIGHTARM)
-            ];
+            precond = [compose(ONTABLE, X) compose(EMPTYARM, RIGHTARM) ...
+                compose(CLEAR, X)];
+            add = [compose(HOLDING, [X, RIGHTARM])];
+            del = [compose(ONTABLE, X) compose(EMPTYARM, RIGHTARM)];
         case STACK
-          
-            precond = [
-                compose(HOLDING, [X inferedArm]) ...
-                compose(CLEAR, Y)
-            ];
-            add = [
-                compose(ON, [X Y]) ...
-                compose(EMPTYARM, inferedArm)
-            ];
-            del = [
-                compose(HOLDING, [X inferedArm]) ...
-                compose(CLEAR, Y)
-            ];
+            precond = [compose(HOLDING, [X inferedArm]) compose(CLEAR, Y)];
+            add = [compose(ON, [X Y]) compose(EMPTYARM, inferedArm)];
+            del = [compose(HOLDING, [X inferedArm]) compose(CLEAR, Y)];
         case UNSTACKLEFT
-            precond = [
-                compose(ON, [X, Y]) ...
-                compose(CLEAR, X) ...
-                compose(EMPTYARM, LEFTARM)
-            ];
-            add = [
-                compose(HOLDING, [X, LEFTARM]) ...
-                compose(CLEAR, Y)
-            ];
-            del = [
-                compose(ON, [X, Y]) ...
-                compose(EMPTYARM, LEFTARM)
-            ];
+            precond = [compose(ON, [X, Y]) compose(CLEAR, X) ...
+                compose(EMPTYARM, LEFTARM)];
+            add = [compose(HOLDING, [X, LEFTARM]) compose(CLEAR, Y)];
+            del = [compose(ON, [X, Y]) compose(EMPTYARM, LEFTARM)];
         case UNSTACKRIGHT
-            precond = [
-                compose(ON, [X, Y]) ...
-                compose(CLEAR, X) ...
-                compose(EMPTYARM, RIGHTARM)
-            ];
-            add = [
-                compose(HOLDING, [X, RIGHTARM]) ...
-                compose(CLEAR, Y)
-            ];
-            del = [
-                compose(ON, [X, Y]) ...
-                compose(EMPTYARM, RIGHTARM)
-            ];
+            precond = [compose(ON, [X, Y]) compose(CLEAR, X) ...
+                compose(EMPTYARM, RIGHTARM)];
+            add = [compose(HOLDING, [X, RIGHTARM]) compose(CLEAR, Y)];
+            del = [compose(ON, [X, Y]) compose(EMPTYARM, RIGHTARM)];
         case LEAVE
-            precond = [
-                compose(HOLDING, [X, inferedArm])
-            ];
-            add = [
-                compose(ONTABLE, X) ...
-                compose(EMPTYARM, inferedArm)
-            ];
-            del = [
-                compose(HOLDING, [X, inferedArm])
-            ];
+            precond = [compose(HOLDING, [X, inferedArm])];
+            add = [compose(ONTABLE, X) compose(EMPTYARM, inferedArm)];
+            del = [compose(HOLDING, [X, inferedArm])];
         otherwise
-            error("Unknown action")
+            error("Unknown action. Check the constants script")
     end
 end
 
 function check = isheavier(blockWeight,blockX,blockY)
+    % Function that checks if the weight of Block X is greather or equal
+    % to the Block Y.
     check = (blockWeight(char(blockX)) >= blockWeight(char(blockY)));
 end
 
 function check = islightblock(blockWeight,blockX)
+    % Function that checks if the weight of Block X is equal to the maximum
+    % light weight.
     loadconstants
     check = (blockWeight(char(blockX)) == MAXLIGHTWEIGHT);
 end
 
-function check = iscolavailable(state)
-    loadconstants
-    MaxColumns = 3; % TODO: global isn't workin!
-    check = sum(count(state, ONTABLE)) < MaxColumns;
-end
+
 

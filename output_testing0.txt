@@ -1,0 +1,13 @@
+4
+13
+UNSTACK-LEFT(B,A),STACK(B,C),PICK-UP-LEFT(A),STACK(A,B)
+-------------
+CLEAR(A),EMPTY-ARM(L),EMPTY-ARM(R),ON(A,B),ON(B,C),ON-TABLE(C)
+repeated state
+-------------
+CLEAR(A),CLEAR(B),EMPTY-ARM(R),HOLDING(A,L),ON(B,C),ON-TABLE(C)
+repeated state
+-------------
+CLEAR(A),CLEAR(B),EMPTY-ARM(R),HOLDING(A,L),ON(B,C),ON-TABLE(C)
+repeated state
+-------------
