@@ -87,7 +87,7 @@ classdef DomainParser
         end        
         
         function predicate = parsePredicate(obj, predStr)
-            predStr = regexp(predStr, "[a-zA-Z\-\_]*", 'match');
+            predStr = regexp(predStr, "[0-9a-zA-Z\-\_]*", 'match');
             predicate = Predicate(predStr{1}, predStr(1, 2:end));
         end
         

@@ -25,7 +25,7 @@ classdef Planner
                 children = obj.applyOperators(state);                
                 tree = [tree, children];
 
-                if ismember(initialState.toString(), arrayfun(@(c) c.toString(), children))
+                if length(children) > 0 && ismember(initialState.toString(), arrayfun(@(c) c.toString(), children))
                     finished = true;
                     plan = tree;
                 end                
@@ -60,10 +60,12 @@ classdef Planner
             state.expanded = true;
         end
 
-        function [accepted, conditions] = regression(obj, operator, predicates)
+        function [accepted, conditions] = regression(obj, operator, predicates)                        
             accepted = true;
             % check if predicates in operator delete block
             if (any(ismember([predicates.string], [operator.del.string])))
+                accepted = false;
+            elseif (length(setdiff([operator.add.string], [predicates.string])) > 0)
                 accepted = false;
             end
             conditions = setdiff(predicates, operator.add);
