@@ -21,8 +21,7 @@ classdef Planner
 
             while length(obj.statesLeft(tree)) > 0
                 states = obj.statesLeft(tree);                
-                state = states(1);
-                disp("=== new state ===" + state.toString());
+                state = states(1);                
                 children = obj.applyOperators(state);                
                 tree = [tree, children];
 
@@ -50,14 +49,13 @@ classdef Planner
                 operator = obj.operators(o);
                 [accepted, conditions] = obj.regression(operator, state.predicates);
 
-                if (~accepted)
-                  % invalid operator
-                  continue
-                end
-                % Create a new child state with the preConditions and regression
-                % conditions
-                newState = State([operator.preConditions, conditions]);
-                children = [children, newState];
+                if (accepted)
+                    % Create a new child state with the preConditions and regression
+                    % conditions
+                    newState = State([operator.preConditions, conditions]);
+                    disp(operator.label + " ==> " + newState.toString());
+                    children = [children, newState];
+                end                
             end
             state.expanded = true;
         end
