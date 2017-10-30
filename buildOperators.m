@@ -49,9 +49,9 @@ function operators = buildOperators(arms, blocks, maxCols, weakArm, lightWeight)
                 % Once the operator is built it's added to the Operators array
                 % DOMAIN KNOWLEDGE
 
-                %if (c == maxCols)
-                %    continue
-                %end
+                if (c == maxCols)
+                    continue
+                end
                 leaveOperator = BlockOperator("LEAVE", arm, block1.label, "", c+1);
                 leaveOperator.preConditions = [Predicate("HOLDING", [block1.label, arm]), Predicate("USED-COLS-NUM", c)];
                 leaveOperator.add = [Predicate("ON-TABLE", block1.label), Predicate("EMPTY-ARM", arm), Predicate("USED-COLS-NUM", c+1), Predicate("CLEAR", block1.label)];

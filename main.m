@@ -21,6 +21,8 @@ planner = Planner(OPERATORS);
 initialState = domain.getInitialState();
 finalState = domain.getFinalState();
 % Build the plan
+disp("=== initial state===" + initialState.toString());
+disp("=== final state===" + initialState.toString());
 plan = planner.buildPlan(initialState, finalState);
 %% Application of domain knowledge
 % Domain knowledge is applied to prevent impossible operations not
