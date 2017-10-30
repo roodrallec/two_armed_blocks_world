@@ -18,90 +18,90 @@ loadconstants
 
 % Parse blocks
 blockWeight = parseBlocks(Blocks);
-isheavier(blockWeight,'A','B')
+%isheavier(blockWeight,'A','B')
 
 ei = parseState(InitialState);
 ef = parseState(GoalState);
 
-ei(3)
-[n, a] = decompose(ei(3));
-compose(n,a)
+% ei(3)
+% [n, a] = decompose(ei(3));
+% compose(n,a)
 
 %[pre, add, del] = action("STACK", ["A", "B"]);
 % Adding HEAVIER, LIGHT-BLOCK, USE-COLS-NUM?
 
 %% Solver
 maxIter = 100;
-visitedStates = [ef];
-currentState = ef;
+Q = {{ef}};
+visitedStates = {ef};
+P = {{}};
+done = false;
 iter = 1;
-while not(isequal(currentState, ei)) && iter <= maxIter
-    disp("Iteration " + string(iter))
-    nextState = [];
-    for pred = currentState
-        disp(pred)
-        [predName, predArgs] = decompose(pred);
-        % Infered Actions
-        proposedOperators = infereactions(pred);
-        for op = proposedOperators
-            disp(op)
-            [opName, opArgs] = decompose(op);
-            opwithparam = contains(op, "p");
-            % Used generated opArgs (regardless of parameters)
-            [prec, add, del] = action(opName, opArgs);
-            
-            regoutput = arrayfun(@(p) regression(p, add, del), currentState);
-            % if FALSE in regoutput, discard operator,
-            % elif parameters, deal with them
-            % else check for inconsistencies, give final OK 
-            if ismember("FALSE", regoutput)
-                disp("FALSE in regout")
-                continue
-            elseif opwithparam
-                disp("DEAL with partial instantiaded")
-                % EMPTY-ARM caused by
-                %   CL(X) + ON(X,Y) => STACK(X,Y)
-                %   CL(X) + ON-T(X) => LEAVE(X)
-                switch EMPTYARM
-                    
-                
-            else
-                disp("CHECK inconsistencies")
-                % HEAVIER, USED-COLS-NUM,LIGHT-BLOCK,
-                % INCONSISTENCIES
-            end
-            % OP is a good candidate
-            % NextState = [OP Prec + RegFunOutput]
-            
-            nextState = sort([prec regoutput(not(regoutput == "TRUE"))]);
-           
-        end
-        
-        
+while not(done) && not(isempty(Q)) && iter <= maxIter
+    disp("Iteration: " + string(iter))
+    prevStateSeq = Q{1};    
+    prevState = prevStateSeq{1};
+    Q = Q(2:end);
+    prevPSeq = P{1};
+    P = P(2:end);
+    
+    % Expand Node (Possible actions that lead to the state)
+    % Infere valid actions from state
+    proposedActionDesc = [];
+    for p = prevState
+        actions = inferaction(p, prevState, blockWeight);
+        proposedActionDesc = [proposedActionDesc actions];
     end
+    proposedActionDesc = unique(proposedActionDesc(proposedActionDesc > ""));
+    disp("  Proposed Act: " + join(proposedActionDesc,','));
+    % Generate action predicates
+    for actDesc = proposedActionDesc
+        disp("    Action: " + actDesc)
+        [prec, add, del] = action(actDesc, prevState, blockWeight);
+  
+        % Apply generation function
+        regoutput = arrayfun(@(p) regression(p, add, del), prevState);
+
+        % if FALSE in regoutput, discard operator
+        % else Feasible Action, it is a good candidate
+        if ismember("FALSE", regoutput)
+            disp("      FALSE in regout");
+            continue
+        else
+            % NextState = [ActionPrec + RegFunOutput]
+            nextState = sort(unique([prec regoutput(not(regoutput == "TRUE"))]));
+            disp("      Next State: " + join(nextState,','));
+            if any(cellfun(@(s) isequal(nextState, s), visitedStates))
+                disp("        Already visited state");
+                continue
+            else
+                visitedStates = {visitedStates{:}, nextState};
+            end
+            
+            % Add State node
+            nextStateSeq = [{nextState} prevStateSeq];
+            Q = {Q{:} nextStateSeq};
+            % Add Plan node
+            nextPSeq = [actDesc prevPSeq];
+            P = {P{:} nextPSeq};
+
+            %plan = [actDesc plan]; %TODO: improve as search
+            if isequal(nextState, ei)
+                disp("DONE! Plan: " + join(P{end}, ','));
+                done = true;
+                break
+            end
+        end
+    end
+
     iter = iter + 1;
 end
 
 
 
+
+
 %% Functions
-function pred = findEA(state)
-    % State is sorted
-    actions = [];
-    for p = state
-        n,a = decompose(p);
-        clearArgs = [];
-        if n == CLEAR
-            clearArgs = [clearArgs a];
-        elseif n == ON && ismember(a(1), clearArgs)
-            actions = [actions compose(STACK, a)];
-        elseif n == ONTABLE && ismember(a, clearArgs)
-            actions = [actions compose(LEAVE, a)];
-        end            
-     
-    end
-end
-% FIND CLEAR(X) + ON(X,Y) -> return X,Y
 function regout = regression(pred, add, del)
     if ismember(pred, add)
         regout = "TRUE";
@@ -111,49 +111,85 @@ function regout = regression(pred, add, del)
         regout = pred;
     end
 end
-function actions = infereactions(pred)
+function actions = inferaction(pred, state, blockWeight)
     loadconstants
+    actions = [""];
     [name, args] = decompose(pred);
     switch name
         case ONTABLE
-            actions = compose(LEAVE, args);
+            checkEmptyArm = any(contains(state, "EMPTY-ARM"));
+            checkOn = any(contains(state(contains(state, "ON(")), args(1) + ")"));
+            if checkEmptyArm && not(checkOn)
+                actions = compose(LEAVE, args);
+            end
         case ON
-            actions = compose(STACK, args);
-        case CLEAR 
-            actions = [
-                compose(UNSTACKLEFT, ["p", args]) ... 
-                compose(UNSTACKRIGHT, ["p", args])
-            ];
-        case EMPTYARM
-            actions = [];
+            checkHeavier = isheavier(blockWeight,args(2), args(1));
+            % Check if state contains ON(p,X). Incompatible with HOLDING(X)
+            % [precondition incompatible with state]
+            checkOn = any(contains(state(contains(state, "ON(")), args(1) + ")"));
+            if checkHeavier && not(checkOn)
+                actions = compose(STACK, args);
+            end
+        case CLEAR
+            % FIND 
+            %  CLEAR(Y) + HOLDING(X,L) <= UNSTACK-LEFT(X,Y)
+            %  CLEAR(Y) + HOLDING(X,R) <= UNSTACK-RIGHT(X,Y)
             for p = state
-                n,a = decompose(p);
-                clearArgs = [];
+                [n, a] = decompose(p);
+                if n == HOLDING && not(a(1) == args)
+                    if a(2) == LEFTARM
+                        actions = compose(UNSTACKLEFT, [a(1) args]);
+                    elseif a(2) == RIGHTARM
+                        actions = compose(UNSTACKRIGHT, [a(1) args]);
+                    end
+                end
+            end
+        case EMPTYARM
+            % FIND 
+            %  CLEAR(X) and ON(X,Y) <= STACK(X,Y)
+            %  CLEAR(X) and ON-TABLE(X) <= LEAVE(X)
+            clearArgs = [];
+            for p = state
+                [n, a] = decompose(p);
                 if n == CLEAR
                     clearArgs = [clearArgs a];
-                elseif n == ON && ismember(a(1), clearArgs)
+                elseif n == ON && ismember(a(1), clearArgs)  % and the X of ON(X,Y) is CLEAR
                     actions = [actions compose(STACK, a)];
-                elseif n == ONTABLE && ismember(a, clearArgs)
+                elseif n == ONTABLE && ismember(a, clearArgs)  % CHECK USED-COLS-NUM ?
                     actions = [actions compose(LEAVE, a)];
                 end
             end
-%             actions = [
-%                 compose(STACK, ["p", "p"]) ...
-%                 compose(LEAVE, "p")
-%             ];
         case HOLDING
-            if(args(2) == LEFTARM)
-                actions = [
-                    compose(PICKUPLEFT, args(1)) ...
-                    compose(UNSTACKLEFT, [args(1), "p"])
-                ];
-            elseif(args(2) == RIGHTARM)
-                actions = [
-                    compose(PICKUPRIGHT, args(1))
-                    compose(UNSTACKRIGHT, [args(1), "p"])
-                ];
+            % If columns available, could be from PICKUP
+            if iscolavailable(state)
+                if args(2) == LEFTARM
+                    actions = compose(PICKUPLEFT, args(1));
+                elseif args(2) == RIGHTARM
+                    actions = compose(PICKUPRIGHT, args(1));
+                end
             end
+            % Or If CLEAR(Y), could be from UNSTACK
+            % FIND
+            %  CLEAR(Y) + HOLDING(X,L) <= UNSTACK-LEFT(X,Y)
+            %  CLEAR(Y) + HOLDING(X,R) <= UNSTACK-RIGHT(X,Y)
+            % TODO: covered in the CLEAR statement? 
+%             for p = state
+%                 [n, a] = decompose(p);
+%                 if n == CLEAR
+%                     if args(2) == LEFTARM
+%                         actions = [actions compose(UNSTACKLEFT, [args(1) a])]; % CHECK PRECONDITIONS? LEFT with lightblock
+%                     elseif args(2) == RIGHTARM
+%                         actions = [actions compose(UNSTACKRIGHT, [args(1) a])];
+%                     end
+%                 end
+%             end
     end
+end
+
+function check = iscolavailable(state)
+    loadconstants
+    MaxColumns = 3; % TODO: global isn't workin!
+    check = sum(count(state, ONTABLE)) < MaxColumns;
 end
 
 function state = parseState(stateDesc)
@@ -172,19 +208,32 @@ function predDesc = compose(predName, predArgs)
     predDesc = predName + "(" + join(predArgs, ',') + ")";
 end
 
-function [precond, add, del] = action(actName, actArgs)
+function [precond, add, del] = action(actDesc, state, blockWeight)
     loadconstants
+    [actName, actArgs] = decompose(actDesc);
     X = actArgs(1);
     if(size(actArgs, 2) > 1)
         Y = actArgs(2);
     end
+    
+    % Infere Arm to be used
+    %checkHeavier = isheavier(blockWeight, Y, X);
+    checkLight = islightblock(blockWeight, X);
+    checkEmptyLeft = any(contains(state, compose(EMPTYARM, LEFTARM)));
+    checkEmptyRight = any(contains(state, compose(EMPTYARM, RIGHTARM)));
+    if(checkEmptyLeft && checkLight)
+        inferedArm = LEFTARM;
+    elseif(checkEmptyRight)
+        inferedArm = RIGHTARM;
+    end
+    
     switch actName
         case PICKUPLEFT
             precond = [
                 compose(ONTABLE, X) ...
                 compose(EMPTYARM, LEFTARM) ...
                 compose(CLEAR, X) ...
-                compose(LIGHTBLOCK, X)
+                %compose(LIGHTBLOCK, X)
             ];
             add = [
                 compose(HOLDING, [X LEFTARM])% ...
@@ -209,17 +258,18 @@ function [precond, add, del] = action(actName, actArgs)
                 compose(EMPTYARM, RIGHTARM)
             ];
         case STACK
+          
             precond = [
-                compose(HOLDING, [X, "a"]) ...
+                compose(HOLDING, [X inferedArm]) ...
                 compose(CLEAR, Y) ...
-                compose(HEAVIER, [Y, X])
+                % compose(HEAVIER, [Y, X])
             ];
             add = [
-                compose(ON, [X, Y]) ...
-                compose(EMPTYARM, LEFTARM)
+                compose(ON, [X Y]) ...
+                compose(EMPTYARM, inferedArm)
             ];
             del = [
-                compose(HOLDING, [X, "a"]) ...
+                compose(HOLDING, [X inferedArm]) ...
                 compose(CLEAR, Y)
             ];
         case UNSTACKLEFT
@@ -227,7 +277,7 @@ function [precond, add, del] = action(actName, actArgs)
                 compose(ON, [X, Y]) ...
                 compose(CLEAR, X) ...
                 compose(EMPTYARM, LEFTARM) ...
-                compose(LIGHTBLOCK, X)
+                %compose(LIGHTBLOCK, X)
             ];
             add = [
                 compose(HOLDING, [X, LEFTARM]) ...
@@ -253,16 +303,16 @@ function [precond, add, del] = action(actName, actArgs)
             ];
         case LEAVE
             precond = [
-                compose(HOLDING, [X, "a"]) ...
+                compose(HOLDING, [X, inferedArm]) ...
                 % compose(USEDCOLSNUM, true)
             ];
             add = [
                 compose(ONTABLE, X) ...
-                compose(EMPTYARM, LEFTARM)
+                compose(EMPTYARM, inferedArm)
                 % compose(USEDCOLSNUM, true) ...
             ];
             del = [
-                compose(HOLDING, [X, "a"])
+                compose(HOLDING, [X, inferedArm])
             ];
         otherwise
             error("Unknown action")
@@ -279,10 +329,10 @@ end
 
 % Utility Functions
 function check = isheavier(blockWeight,blockX,blockY)
-    check = (blockWeight(blockX) >= blockWeight(blockY));
+    check = (blockWeight(char(blockX)) >= blockWeight(char(blockY)));
 end
 
 function check = islightblock(blockWeight,blockX)
     loadconstants
-    check = (blockWeight(blockX) == MAXLIGHTWEIGHT);
+    check = (blockWeight(char(blockX)) == MAXLIGHTWEIGHT);
 end
