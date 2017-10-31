@@ -1,36 +1,113 @@
+%% Non-Linear Planner with Regression Implementation script
+% The script is divided in the following sections.
+% - Cases: executes testing and benchmark cases and generates the outpu files
+% - Benchmark 1 and 2: executes benchmark 1 and 2 series for the graphic analysis
+% - Solver and Functions: contains the algorithm implementation
+% - loadconstants.m: contains the constants definitions
+
 clc, clear all;
 
-%% Main
-inputFiles = dir('testing*.txt');
+%% Cases
+inputFiles = [dir('testing*.txt'); dir('benchmark*.txt')];
 for filename = {inputFiles.name}
     % Load Input
     [MaxColumns, blockWeight, ei, ef] = DomainParser(filename{:});
-    outputFile = strrep(filename{:}, "testing", "output_testing");
+    outputFile =  "output_" + filename{:};
     
     % Execute Solver
-    solverOutput = solver(MaxColumns, blockWeight, ei, ef);
+    [o, i, n, t] = solver(MaxColumns, blockWeight, ei, ef);
     
     % Save output
     fid=fopen(outputFile,'w');
-    fprintf(fid, solverOutput);
+    fprintf(fid, o);
     fclose(fid);
     
 end
 
+%% Benchmark 1
+% ncols = [3 4 5 6];
+% nstates = [1680 2661 3086 3100];
+% noperators = [18 12 12 12];
+
+ncols = [];
+nstates = [];
+noperators = [];
+times = [];
+[MaxColumns, blockWeight, ei, ef] = DomainParser('Benchmark1.txt');
+for nc = [3:6]
+    % Execute Solver
+    [o, i, n, t] = solver(nc, blockWeight, ei, ef);
+    % Accumulate outputs
+    ncols = [ncols nc];
+    nstates = [nstates i];
+    noperators = [noperators n];
+    times = [times t];
+end
+
+% Plot
+fig = figure;
+subplot(3,1,1), plot(ncols,nstates), ...
+    xticks(ncols), ylabel("Gen. States"), title("Benchmark 1");
+subplot(3,1,2), plot(ncols,noperators), ...
+    xticks(ncols), ylabel("Operators");
+subplot(3,1,3), plot(ncols,times), ...
+    xticks(ncols), ylabel("Time [s]"), xlabel("Num. of Columns");
+print(fig,'benchmark1','-dpng')
+
+
+%% Benchmark 2
+ncols = [3 4 5 6];
+nstates = [9078 23855 23276 24169];
+noperators = [32 20 16 16];
+times = [178.8401 654.3292 635.7041 662.2644];
+
+% % Warning: takes ~35min to execute
+% ncols = [];
+% nstates = [];
+% noperators = [];
+% times = [];
+% [MaxColumns, blockWeight, ei, ef] = DomainParser('Benchmark2.txt');
+% for nc = [3:6]
+%     % Execute Solver
+%     [o, i, n, t] = solver(nc, blockWeight, ei, ef);
+%     % Accumulate outputs
+%     ncols = [ncols nc];
+%     nstates = [nstates i];
+%     noperators = [noperators n];
+%     times = [times t];
+% end
+
+% Plot
+fig = figure;
+subplot(3,1,1), plot(ncols,nstates), ...
+    xticks(ncols), ylabel("Gen. States"), title("Benchmark 2");
+subplot(3,1,2), plot(ncols,noperators), ...
+    xticks(ncols), ylabel("Operators");
+subplot(3,1,3), plot(ncols,times/60), ...
+    xticks(ncols), ylabel("Time [min]"), xlabel("Num. of Columns");
+print(fig,'benchmark2','-dpng')
+
 
 %% Solver
-function output = solver(MaxColumns, blockWeight, ei, ef)
+function [output, ii, nn, tt] = solver(MaxColumns, blockWeight, ei, ef)
     % Solver function implements the Breadth-First Search algorithm for 
     % finding the shortest path from the final state to the initial state.
     
     % Initialisation
-    maxIter = 500;
+    tic;
+    maxIter = 50000;
     Q = {{ef}};
     visitedStates = {ef};
     P = {{}};
     done = false;
-    output_main = []; output_detail = []; 
+    output_main = []; output_detail = []; output = "";
     iter = 1; ii = 0; nn = 0;
+    
+    % Check if Goal state is achieved
+    if isequal(ef, ei)
+        warning("Final state is the same of initial state")
+        done = true;
+    end
     
     while not(done) && not(isempty(Q)) && iter <= maxIter
         disp("Iteration: " + string(iter))
@@ -105,18 +182,26 @@ function output = solver(MaxColumns, blockWeight, ei, ef)
         nn = length(P{end});
         disp("Number of operators: " + string(nn))
         disp("Number of states generated: " + string(ii))
+        if isempty(join(P{end},','))
+            P = {["None"]};
+            output_detail = "";
+        end
         disp("Plan: " + join(P{end}, ','))
         output_main = [string(nn) string(ii) join(P{end}, ',') ...
             "-------------"];
     elseif isempty(Q)
         warning("Plan not found. There is no way to reach the Goal State")
+        return
     elseif iter > maxIter
         warning("Max number of iterations reached!")
+        return
     end
     
     % Output file content
     EOL = '\r\n';
     output = join(output_main, EOL) + EOL + join(output_detail, EOL);
+    % Time
+    tt = toc;
 end
 
 %% Functions
@@ -345,6 +430,3 @@ function check = islightblock(blockWeight,blockX)
     loadconstants
     check = (blockWeight(char(blockX)) == MAXLIGHTWEIGHT);
 end
-
-
-
