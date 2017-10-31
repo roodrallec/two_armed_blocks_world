@@ -1,52 +1,152 @@
-% Main
 clc; clear all;
-%% Construct the problem domain from a parsed txt file
-FILE_NAME = "problem1_input.txt";
-domain = DomainParser(FILE_NAME);
-%% Domain constants
-ARMS = domain.getArms();
-BLOCKS = domain.getBlocksMap();
-MAX_COLS = domain.getMaxCols();
-LIGHT_WEIGHT = 1;
-WEAK_ARM = "L";
-% Operators that can be applied to states
-OPERATORS = buildOperators(ARMS, BLOCKS, MAX_COLS, WEAK_ARM, LIGHT_WEIGHT);
-% Visualise an operator table
-cell2table({ OPERATORS.name; OPERATORS.arm; OPERATORS.block1;...
-    OPERATORS.block2; OPERATORS.cols;...
-    OPERATORS.preConditions; OPERATORS.add; OPERATORS.del })
-%% PLanner to build the path from stateA to stateB through goal regression
-planner = Planner(OPERATORS);
-%% Construct initial and final state
-initialState = domain.getInitialState();
-finalState = domain.getFinalState();
-% Build the plan
-disp("=== initial state===" + initialState.toString());
-disp("=== final state===" + initialState.toString());
-plan = planner.buildPlan(initialState, finalState);
-%% Application of domain knowledge
-% Domain knowledge is applied to prevent impossible operations not
-% dealt by the regression algorithm.
-% There are two ways that the domain knowledge can be applied:
-% The first is buy preventing any impossible operators from being built
-% this method is applied for rule 1, rule 2 in the buildOperators function.
-% The second is by adding the necessary preconditions to the state so that
-% the operator sees it as forbidden, this method is applied in the
-% buildDomainPredicates function.
+ARMS = ["L", "R"];
+BLOCKS = ["A", "B", "C", "D", "F"];
 
-% Rule 1:
-% An multi-block operator cannot operate on the same block
-% e.g. STACK(L, A, A)
-% This rule is implemented in the buildOperator function.
+operators = [];
+for a = 1:length(ARMS)
+    arm = ARMS(a);
+    for b1 = 1:length(BLOCKS)
+        block1 = BLOCKS(b1);
+        for b2 = 1:length(BLOCKS)
+            block2 = BLOCKS(b2);
+            if (block2 == block1)
+              continue;
+            end
+            %% PickupOperator
+            pickupOperator = {};
+            pickupOperator.label = "pickup " + block1 + " with " + arm;
+            pickupOperator.pre = predToMat("ON-TABLE", "Block1", block1)...
+                               + predToMat("EMPTY-ARM", "Arm", arm)...
+                               + predToMat("CLEAR", "Block1", block1);
 
-% Rule 2:
-% The stacks of blocks is limited to 3
-% This rule is implemented in the buildOperator function.
+            pickupOperator.add = predToMat("HOLDING", "Block1", block1)...
+                               + predToMat("HOLDING", "Arm", arm);
 
-% Rule 3:
-% The left arm can only lift blocks which are of 1kg
-% Any blocks with 1kg have a predicate added to the state
+            pickupOperator.del = predToMat("ON-TABLE", "Block1", block1)...
+                               + predToMat("EMPTY-ARM", "Arm", arm);
+            %% StackOperator
+            stackOperator = {};
+            stackOperator.label = "stack " + block1 + " on " + block2 + " with " + arm;
+            stackOperator.pre = predToMat("HOLDING", "Block1", block1)...
+                               + predToMat("HOLDING", "Arm", arm)...
+                               + predToMat("CLEAR", "Block2", block2);
 
-% Rule 4:
-% A block can only be placed on a block equal or heavier than itself
-% Heavier predicates are added to the state
+            stackOperator.add = predToMat("ON", "Block1", block1)...
+                              + predToMat("ON", "Block2", block2)...
+                              + predToMat("EMPTY-ARM", "Arm", arm);
+
+            stackOperator.del = predToMat("HOLDING", "Block1", block1)...
+                              + predToMat("HOLDING", "Arm", arm)...
+                              + predToMat("CLEAR", "Block2", block2);
+            %% Un-Stack Operator
+            unStackOperator = {};
+            unStackOperator.label = "unStack " + block1 + " from " + block2 + " with " + arm;
+            unStackOperator.pre = predToMat("ON", "Block1", block1)...
+                                + predToMat("ON", "Block2", block2)...
+                                + predToMat("CLEAR", "Block1", block1)...
+                                + predToMat("EMPTY-ARM", "Arm", arm);
+
+            unStackOperator.add = predToMat("HOLDING", "Block1", block1)...
+                                + predToMat("HOLDING", "Arm", arm)...
+                                + predToMat("CLEAR", "Block2", block2);
+
+            unStackOperator.del = predToMat("ON", "Block1", block1)...
+                                + predToMat("ON", "Block2", block2)...
+                                + predToMat("EMPTY-ARM", "Arm", arm);
+            %% Leave
+            leaveOperator = {};
+            leaveOperator.label = "leave " + block1 + " with " + arm;
+            leaveOperator.pre = predToMat("HOLDING", "Block1", block1)...
+                              + predToMat("HOLDING", "Arm", arm);
+
+            leaveOperator.add = predToMat("ON-TABLE", "Block1", block1)...
+                              + predToMat("EMPTY-ARM", "Arm", arm);
+
+            leaveOperator.del = predToMat("HOLDING", "Block1", block1)...
+                              + predToMat("HOLDING", "Arm", arm);
+            %% Join operators
+            operators = [operators, pickupOperator, stackOperator, unStackOperator, leaveOperator];
+        end
+    end
+end
+
+uniqueOperators = operators(1);
+for idx=1:length(operators)
+  operator = operators(idx);
+  if ismember([operator.label], [uniqueOperators.label])
+    continue;
+  else
+    uniqueOperators = [uniqueOperators, operator];
+  end
+end
+
+InitialState = predToMat("ON-TABLE", "Block1", "C")
+             + predToMat("ON", "Block1", "B")
+             + predToMat("ON", "Block2", "C")
+             + predToMat("ON", "Block1", "A")
+             + predToMat("ON", "Block2", "B")
+             + predToMat("CLEAR", "Block1", "A")
+             + predToMat("ON-TABLE", "Block1", "D")
+             + predToMat("ON", "Block1", "F")
+             + predToMat("ON", "Block2", "D")
+             + predToMat("CLEAR", "Block1", "F")
+             + predToMat("EMPTY-ARM", "Arm", "L")
+             + predToMat("EMPTY-ARM", "Arm", "R");
+
+GoalState = predToMat("ON-TABLE", "Block1", "B")
+          + predToMat("ON", "Block1", "C")
+          + predToMat("ON", "Block2", "B")
+          + predToMat("CLEAR", "Block1", "C")
+          + predToMat("ON-TABLE", "Block1", "D")
+          + predToMat("ON", "Block1", "A")
+          + predToMat("ON", "Block2", "D")
+          + predToMat("ON", "Block1", "F")
+          + predToMat("ON", "Block2", "A")
+          + predToMat("CLEAR", "Block1", "F")
+          + predToMat("EMPTY-ARM", "Arm", "L")
+          + predToMat("EMPTY-ARM", "Arm", "R");
+
+state = GoalState;
+finished = false;
+iteration = 0;
+children = {};
+
+while (finished == false)
+  disp("Level iteration:")
+  disp(iteration);
+
+  for op_id = 1:length(operators)
+    operator = operators(op_id);
+    disp(operator.label);
+
+    if ((state + operator.del) > 1)
+      continue;
+    end
+    state = state + operator.pre;
+    state = state > 0;
+    difference = state - InitialState;
+    disp("Difference:")
+    disp(sum(difference(:)));
+
+    if (state == InitialState)
+      disp("Complete");
+      finished = true;
+    end
+    children = [children, state];
+  end
+  state = children{1};
+  children(1) = [];
+  iteration = iteration + 1;
+  pause(1);
+end
+
+function matrix = predToMat(label, arg, value)
+  PREDS = [ "ON-TABLE", "ON", "CLEAR", "EMPTY-ARM", "HOLDING"];
+  ARGS = [ "Arm", "Block1", "Block2", "Column"];
+  VALS = ["L", "R", "A", "B", "C", "D", "F"];
+  matrix = zeros(length(PREDS), length(ARGS), length(VALS));
+  p_idx = find(strcmp(PREDS, label));
+  a_idx = find(strcmp(ARGS, arg));
+  v_idx = find(strcmp(VALS, value));
+  matrix(p_idx,a_idx,v_idx) = 1;
+end
