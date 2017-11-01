@@ -1,0 +1,52 @@
+Iteration: 1
+Current State: CLEAR(A),EMPTY-ARM(L),EMPTY-ARM(R),ON(A,B),ON(B,C),ON-TABLE(C)
+  Proposed Actions: STACK(A,B)
+    Analising: STACK(A,B)
+      Next State: CLEAR(A),CLEAR(B),EMPTY-ARM(R),HOLDING(A,L),ON(B,C),ON-TABLE(C)
+Iteration: 2
+Previous Actions: STACK(A,B)
+Current State: CLEAR(A),CLEAR(B),EMPTY-ARM(R),HOLDING(A,L),ON(B,C),ON-TABLE(C)
+  Proposed Actions: PICK-UP-LEFT(A),STACK(B,C),UNSTACK-LEFT(A,B)
+    Analising: PICK-UP-LEFT(A)
+      Next State: CLEAR(A),CLEAR(B),EMPTY-ARM(L),EMPTY-ARM(R),ON(B,C),ON-TABLE(A),ON-TABLE(C)
+    Analising: STACK(B,C)
+      Next State: CLEAR(A),CLEAR(B),CLEAR(C),HOLDING(A,L),HOLDING(B,R),ON-TABLE(C)
+    Analising: UNSTACK-LEFT(A,B)
+      Next State: CLEAR(A),EMPTY-ARM(L),EMPTY-ARM(R),ON(A,B),ON(B,C),ON-TABLE(C)
+        State already visited
+Iteration: 3
+Previous Actions: PICK-UP-LEFT(A),STACK(A,B)
+Current State: CLEAR(A),CLEAR(B),EMPTY-ARM(L),EMPTY-ARM(R),ON(B,C),ON-TABLE(A),ON-TABLE(C)
+  Proposed Actions: LEAVE(A),STACK(B,C)
+    Analising: LEAVE(A)
+      Next State: CLEAR(A),CLEAR(B),EMPTY-ARM(R),HOLDING(A,L),ON(B,C),ON-TABLE(C)
+        State already visited
+    Analising: STACK(B,C)
+      Next State: CLEAR(A),CLEAR(B),CLEAR(C),EMPTY-ARM(R),HOLDING(B,L),ON-TABLE(A),ON-TABLE(C)
+Iteration: 4
+Previous Actions: STACK(B,C),STACK(A,B)
+Current State: CLEAR(A),CLEAR(B),CLEAR(C),HOLDING(A,L),HOLDING(B,R),ON-TABLE(C)
+  Proposed Actions: PICK-UP-LEFT(A),PICK-UP-RIGHT(B),UNSTACK-RIGHT(B,C)
+    Analising: PICK-UP-LEFT(A)
+      Next State: CLEAR(A),CLEAR(B),CLEAR(C),EMPTY-ARM(L),HOLDING(B,R),ON-TABLE(A),ON-TABLE(C)
+    Analising: PICK-UP-RIGHT(B)
+      Next State: CLEAR(A),CLEAR(B),CLEAR(C),EMPTY-ARM(R),HOLDING(A,L),ON-TABLE(B),ON-TABLE(C)
+    Analising: UNSTACK-RIGHT(B,C)
+      Next State: CLEAR(A),CLEAR(B),EMPTY-ARM(R),HOLDING(A,L),ON(B,C),ON-TABLE(C)
+        State already visited
+Iteration: 5
+Previous Actions: STACK(B,C),PICK-UP-LEFT(A),STACK(A,B)
+Current State: CLEAR(A),CLEAR(B),CLEAR(C),EMPTY-ARM(R),HOLDING(B,L),ON-TABLE(A),ON-TABLE(C)
+  Proposed Actions: LEAVE(A),LEAVE(C),PICK-UP-LEFT(B),UNSTACK-LEFT(B,A),UNSTACK-LEFT(B,C)
+    Analising: LEAVE(A)
+      Next State: CLEAR(A),CLEAR(B),CLEAR(C),HOLDING(A,R),HOLDING(B,L),ON-TABLE(C)
+    Analising: LEAVE(C)
+      Next State: CLEAR(A),CLEAR(B),CLEAR(C),HOLDING(B,L),HOLDING(C,R),ON-TABLE(A)
+    Analising: PICK-UP-LEFT(B)
+      Next State: CLEAR(A),CLEAR(B),CLEAR(C),EMPTY-ARM(L),EMPTY-ARM(R),ON-TABLE(A),ON-TABLE(B),ON-TABLE(C)
+    Analising: UNSTACK-LEFT(B,A)
+      Next State: CLEAR(B),CLEAR(C),EMPTY-ARM(L),EMPTY-ARM(R),ON(B,A),ON-TABLE(A),ON-TABLE(C)
+DONE!
+Number of operators: 4
+Number of states generated: 13
+Plan: UNSTACK-LEFT(B,A),STACK(B,C),PICK-UP-LEFT(A),STACK(A,B)
