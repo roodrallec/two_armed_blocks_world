@@ -8,7 +8,8 @@
 clc, clear all;
 
 %% Cases
-inputFiles = [dir('testing*.txt'); dir('benchmark*.txt')];
+%inputFiles = [dir('testing*.txt'); dir('benchmark*.txt')];
+inputFiles = [dir('TESTING-*.txt')];
 for filename = {inputFiles.name}
     % Load Input
     [MaxColumns, blockWeight, ei, ef] = DomainParser(filename{:});

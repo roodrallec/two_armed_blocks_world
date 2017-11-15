@@ -1,0 +1,67 @@
+6
+49
+UNSTACK-RIGHT(D,E),LEAVE(D),UNSTACK-RIGHT(B,C),STACK(B,E),PICK-UP-RIGHT(C),STACK(C,D)
+-------------
+CLEAR(B),CLEAR(C),EMPTY-ARM(L),EMPTY-ARM(R),ON(B,E),ON(C,D),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(C),EMPTY-ARM(L),EMPTY-ARM(R),ON(B,E),ON(C,D),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(C),CLEAR(E),EMPTY-ARM(L),HOLDING(B,R),ON(C,D),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(C),CLEAR(E),EMPTY-ARM(L),HOLDING(B,R),ON(C,D),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(C),CLEAR(D),EMPTY-ARM(L),HOLDING(C,R),ON(B,E),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(C),CLEAR(D),EMPTY-ARM(L),HOLDING(C,R),ON(B,E),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(C),CLEAR(E),EMPTY-ARM(L),EMPTY-ARM(R),ON(C,D),ON-TABLE(B),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(C),CLEAR(E),EMPTY-ARM(L),EMPTY-ARM(R),ON(C,D),ON-TABLE(B),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(E),EMPTY-ARM(L),EMPTY-ARM(R),ON(B,C),ON(C,D),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(C),CLEAR(D),EMPTY-ARM(L),EMPTY-ARM(R),ON(B,E),ON-TABLE(C),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(C),CLEAR(D),EMPTY-ARM(L),EMPTY-ARM(R),ON(B,E),ON-TABLE(C),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(C),CLEAR(D),EMPTY-ARM(L),EMPTY-ARM(R),ON(B,E),ON(C,B),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(C),CLEAR(D),CLEAR(E),EMPTY-ARM(L),HOLDING(C,R),ON-TABLE(B),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(C),CLEAR(D),CLEAR(E),EMPTY-ARM(L),HOLDING(C,R),ON-TABLE(B),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(C),CLEAR(D),CLEAR(E),EMPTY-ARM(L),HOLDING(B,R),ON-TABLE(C),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(C),CLEAR(D),CLEAR(E),EMPTY-ARM(L),HOLDING(B,R),ON-TABLE(C),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(C),CLEAR(D),CLEAR(E),EMPTY-ARM(L),EMPTY-ARM(R),ON(C,B),ON-TABLE(B),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(C),CLEAR(D),CLEAR(E),EMPTY-ARM(L),EMPTY-ARM(R),ON(C,B),ON-TABLE(B),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(C),CLEAR(D),EMPTY-ARM(L),EMPTY-ARM(R),ON(C,E),ON-TABLE(B),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(C),CLEAR(D),EMPTY-ARM(L),EMPTY-ARM(R),ON(C,E),ON-TABLE(B),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
+CLEAR(B),CLEAR(D),CLEAR(E),EMPTY-ARM(L),EMPTY-ARM(R),ON(B,C),ON-TABLE(C),ON-TABLE(D),ON-TABLE(E)
+repeated state
+-------------
